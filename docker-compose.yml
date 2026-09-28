@@ -1,0 +1,61 @@
+# Explicit project name — otherwise Compose derives it from the containing
+# folder, which is still called "ledger" on disk even after the rebrand.
+name: pairwise
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pairwise
+      POSTGRES_PASSWORD: pairwise
+      POSTGRES_DB: pairwise
+    ports:
+      # Host port 5532, not 5432 — this Mac has a native Homebrew
+      # postgresql@14 bound to 127.0.0.1:5432, which silently wins over
+      # Docker's wildcard bind for loopback connections and would make
+      # any host-side tool (psql, prisma) talk to the wrong server.
+      # Containers still reach this service internally as db:5432.
+      - "5532:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pairwise"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://pairwise:pairwise@db:5432/pairwise?schema=public
+    ports:
+      - "4000:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "npx prisma migrate deploy && npx prisma db seed && node dist/server.js"
+
+  frontend:
+    build:
+      context: ./frontend
+      # NEXT_PUBLIC_* vars must reach `next build` as build args, not as
+      # runtime env — these come from frontend/.env because the command
+      # below is run with --env-file frontend/.env (see README).
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+    restart: unless-stopped
+    ports:
+      # Host port 3300, not 3000 — 3000 is already bound by another
+      # project's container on this machine (rarebite_frontend).
+      - "3300:3000"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

@@ -1,0 +1,19 @@
+# Secrets — never commit real credentials, only the .env.example templates
+.env
+backend/.env
+frontend/.env
+
+# Node
+node_modules/
+.next/
+dist/
+
+# OS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Personal Claude Code overrides (permissions, etc.) — not team-shared config
+.claude/settings.local.json

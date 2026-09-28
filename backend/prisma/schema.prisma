@@ -1,0 +1,370 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  DEVELOPER
+  CREATOR
+  ADMIN
+  BRAND
+}
+
+enum ListerType {
+  CREATOR
+  BRAND
+}
+
+enum UpfrontPurchaseStatus {
+  AGREED
+  FUNDED
+  APPROVED
+  AUTO_APPROVED
+  PAID
+  DISPUTED
+  REFUNDED
+}
+
+enum GateStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MonetizationStatus {
+  PRE_REVENUE
+  EARLY_REVENUE
+  ESTABLISHED
+}
+
+enum OfferSource {
+  RATE_CARD
+  REQUEST
+  CUSTOM
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  COUNTERED
+  DECLINED
+}
+
+enum RequestStatus {
+  OPEN
+  CLOSED
+}
+
+enum OrderStatus {
+  AGREED
+  FUNDED
+  IN_PROGRESS
+  SUBMITTED
+  REVISION_REQUESTED
+  APPROVED
+  AUTO_APPROVED
+  PAID
+  DISPUTED
+  REFUNDED
+}
+
+enum QuestionTargetType {
+  CREATOR
+  UPFRONT_LISTING
+}
+
+enum NotificationType {
+  ORDER_UPDATE
+  UPFRONT_UPDATE
+  CREATOR_REVIEW_STATUS
+  LISTING_REVIEW_STATUS
+  QUESTION_ASKED
+  QUESTION_ANSWERED
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String?
+  googleId      String?  @unique
+  name          String
+  role          Role
+  createdAt     DateTime @default(now())
+
+  developerProfile DeveloperProfile?
+  creatorProfile   CreatorProfile?
+  brandProfile     BrandProfile?
+  upfrontPurchases UpfrontPurchase[]
+  savedCreators    SavedCreator[]
+  questionsAsked   Question[]        @relation("QuestionsAsked")
+  upfrontReviews   UpfrontReview[]
+  notifications    Notification[]
+}
+
+model BrandProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  companyName String
+  website     String?
+  industry    String?
+  // Paystack payout details — same shape as CreatorProfile's, since a
+  // brand's Upfront listings release funds the same way a creator's do.
+  bankAccountNumber     String?
+  bankCode              String?
+  bankAccountName       String?
+  paystackRecipientCode String?
+  createdAt   DateTime @default(now())
+
+  listings UpfrontListing[]
+}
+
+model DeveloperProfile {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id])
+  products     Product[]
+  requests     AdvertRequest[]
+  offers       Offer[]
+  reviewsGiven Review[]  @relation("ReviewsByDeveloper")
+}
+
+model Product {
+  id                 String              @id @default(uuid())
+  developerId        String
+  developer          DeveloperProfile    @relation(fields: [developerId], references: [id])
+  name               String
+  niche              String
+  link               String
+  pitch              String
+  monetizationStatus MonetizationStatus  @default(PRE_REVENUE)
+  mrrKobo           Int?
+  activeUsers        Int?
+  createdAt          DateTime            @default(now())
+
+  requests AdvertRequest[]
+  offers   Offer[]
+}
+
+model CreatorProfile {
+  id              String     @id @default(uuid())
+  userId          String     @unique
+  user            User       @relation(fields: [userId], references: [id])
+  handle          String
+  platform        String
+  followerCount   Int
+  engagementRate  Float
+  nicheTags       String[]
+  gateStatus      GateStatus @default(PENDING)
+  // Paystack payout details — a NUBAN bank account, resolved and confirmed
+  // before saving, then registered as a Paystack transfer recipient.
+  bankAccountNumber     String?
+  bankCode              String?
+  bankAccountName       String?
+  paystackRecipientCode String?
+  createdAt       DateTime   @default(now())
+
+  rateCardItems   RateCardItem[]
+  offers          Offer[]
+  reviews         Review[]         @relation("ReviewsAboutCreator")
+  upfrontListings UpfrontListing[]
+  savedBy         SavedCreator[]
+  questions       Question[]
+}
+
+model RateCardItem {
+  id             String         @id @default(uuid())
+  creatorId      String
+  creator        CreatorProfile @relation(fields: [creatorId], references: [id])
+  deliverable    String
+  priceKobo     Int
+  turnaroundDays Int
+  createdAt      DateTime       @default(now())
+
+  offers Offer[]
+}
+
+model AdvertRequest {
+  id          String        @id @default(uuid())
+  developerId String
+  developer   DeveloperProfile @relation(fields: [developerId], references: [id])
+  productId   String
+  product     Product       @relation(fields: [productId], references: [id])
+  budgetKobo Int
+  brief       String
+  nicheTags   String[]
+  deadline    DateTime
+  status      RequestStatus @default(OPEN)
+  createdAt   DateTime      @default(now())
+
+  offers Offer[]
+}
+
+model Offer {
+  id             String         @id @default(uuid())
+  developerId    String
+  developer      DeveloperProfile @relation(fields: [developerId], references: [id])
+  creatorId      String
+  creator        CreatorProfile @relation(fields: [creatorId], references: [id])
+  productId      String?
+  product        Product?       @relation(fields: [productId], references: [id])
+  rateCardItemId String?
+  rateCardItem   RateCardItem?  @relation(fields: [rateCardItemId], references: [id])
+  requestId      String?
+  request        AdvertRequest? @relation(fields: [requestId], references: [id])
+  source         OfferSource
+  priceKobo     Int
+  deliverable    String
+  status         OfferStatus    @default(PENDING)
+  createdAt      DateTime       @default(now())
+
+  order Order?
+}
+
+model Order {
+  id                    String      @id @default(uuid())
+  offerId               String      @unique
+  offer                 Offer       @relation(fields: [offerId], references: [id])
+  priceKobo            Int
+  platformFeeKobo      Int
+  totalKobo            Int
+  status                OrderStatus @default(AGREED)
+  paystackReference     String?
+  paystackTransferCode  String?
+  fundedAt              DateTime?
+  submittedAt           DateTime?
+  approvedAt            DateTime?
+  paidAt                DateTime?
+  createdAt             DateTime    @default(now())
+
+  review Review?
+}
+
+// The developer who hired the creator leaves this, not the other way
+// round — a review is a trust signal for the *next* developer deciding
+// whether to book this creator, so it has to come from the buyer's side.
+// creatorId is denormalized from order.offer.creatorId at creation time
+// (immutable once an order exists) purely so a creator's aggregate rating
+// can be computed with a single groupBy instead of a join through Order/Offer.
+model Review {
+  id          String         @id @default(uuid())
+  orderId     String         @unique
+  order       Order          @relation(fields: [orderId], references: [id])
+  developerId String
+  developer   DeveloperProfile @relation("ReviewsByDeveloper", fields: [developerId], references: [id])
+  creatorId   String
+  creator     CreatorProfile @relation("ReviewsAboutCreator", fields: [creatorId], references: [id])
+  rating      Int
+  text        String
+  createdAt   DateTime       @default(now())
+}
+
+// A future program a creator or brand plans to run, sold in advance —
+// distinct from Offer/Order's bespoke-deliverable model. Exactly one of
+// creatorId/brandId is set, matching listerType.
+model UpfrontListing {
+  id               String         @id @default(uuid())
+  listerType       ListerType
+  creatorId        String?
+  creator          CreatorProfile? @relation(fields: [creatorId], references: [id])
+  brandId          String?
+  brand            BrandProfile?  @relation(fields: [brandId], references: [id])
+  title            String
+  niche            String
+  description      String
+  audienceSummary  String
+  pricePerSlotKobo Int
+  totalSlots       Int
+  slotsSold        Int            @default(0)
+  programDate      DateTime
+  gateStatus       GateStatus     @default(PENDING)
+  createdAt        DateTime       @default(now())
+
+  purchases UpfrontPurchase[]
+  reviews   UpfrontReview[]
+  questions Question[]
+}
+
+model UpfrontPurchase {
+  id                   String                @id @default(uuid())
+  listingId            String
+  listing              UpfrontListing        @relation(fields: [listingId], references: [id])
+  buyerId              String
+  buyer                User                  @relation(fields: [buyerId], references: [id])
+  priceKobo            Int
+  platformFeeKobo      Int
+  totalKobo            Int
+  status               UpfrontPurchaseStatus @default(AGREED)
+  paystackReference    String?
+  paystackTransferCode String?
+  fundedAt             DateTime?
+  approvedAt           DateTime?
+  paidAt               DateTime?
+  createdAt            DateTime              @default(now())
+
+  review UpfrontReview?
+}
+
+// Mirrors Review's shape/reasoning exactly, one level simpler: the buyer on
+// a PAID purchase reviews the program, denormalizing listingId the same way
+// Review denormalizes creatorId, so a listing's aggregate rating is a
+// single groupBy rather than a join through UpfrontPurchase.
+model UpfrontReview {
+  id         String          @id @default(uuid())
+  purchaseId String          @unique
+  purchase   UpfrontPurchase @relation(fields: [purchaseId], references: [id])
+  buyerId    String
+  buyer      User            @relation(fields: [buyerId], references: [id])
+  listingId  String
+  listing    UpfrontListing  @relation(fields: [listingId], references: [id])
+  rating     Int
+  text       String
+  createdAt  DateTime        @default(now())
+}
+
+// A public pre-purchase question, answerable only by the creator/brand who
+// owns the target — visible to everyone else considering the same creator
+// or program, same reasoning as a product's public Q&A section elsewhere.
+// Exactly one of creatorId/listingId is set, matching targetType.
+model Question {
+  id           String             @id @default(uuid())
+  targetType   QuestionTargetType
+  creatorId    String?
+  creator      CreatorProfile?    @relation(fields: [creatorId], references: [id])
+  listingId    String?
+  listing      UpfrontListing?    @relation(fields: [listingId], references: [id])
+  askerId      String
+  asker        User               @relation("QuestionsAsked", fields: [askerId], references: [id])
+  questionText String
+  answerText   String?
+  answeredAt   DateTime?
+  createdAt    DateTime           @default(now())
+}
+
+model SavedCreator {
+  id        String         @id @default(uuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id])
+  creatorId String
+  creator   CreatorProfile @relation(fields: [creatorId], references: [id])
+  createdAt DateTime       @default(now())
+
+  @@unique([userId, creatorId])
+}
+
+// Purely in-app for now — no outbound email service is configured, so this
+// is what a user sees inside the app rather than in their inbox.
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  type      NotificationType
+  message   String
+  link      String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+}

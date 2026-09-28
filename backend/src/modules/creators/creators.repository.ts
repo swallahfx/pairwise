@@ -27,10 +27,17 @@ export const creatorsRepository = {
     });
   },
 
+  // Admin's own creator profile is APPROVED so admin can exercise the
+  // booking/rate-card flow directly (see auth.service.ts's
+  // adminProfileBundle), but that's a testing/support account, not a real
+  // marketplace listing — it stays reachable at its own URL (an admin
+  // managing it via /creators/me, or anyone with a direct link) without
+  // ever surfacing in the public directory a real developer browses.
   findApproved(niche?: string) {
     return prisma.creatorProfile.findMany({
       where: {
         gateStatus: "APPROVED",
+        user: { role: { not: "ADMIN" } },
         ...(niche ? { nicheTags: { has: niche } } : {})
       },
       include: { rateCardItems: true, user: { select: { name: true } } }

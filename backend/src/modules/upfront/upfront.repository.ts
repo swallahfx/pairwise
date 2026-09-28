@@ -62,9 +62,21 @@ export const upfrontRepository = {
     return prisma.upfrontListing.findUnique({ where: { id }, include: withLister });
   },
 
+  // Same reasoning as creatorsRepository.findApproved — an admin's own
+  // auto-provisioned creator/brand profile can list a test program to
+  // exercise the flow, but it shouldn't surface in the public directory a
+  // real buyer browses. A null relation (the lister's other side) reads as
+  // "doesn't match" here, so this correctly only excludes the side that's
+  // actually set on each row.
   findApproved(niche?: string) {
     return prisma.upfrontListing.findMany({
-      where: { gateStatus: "APPROVED", ...(niche ? { niche } : {}) },
+      where: {
+        gateStatus: "APPROVED",
+        ...(niche ? { niche } : {}),
+        NOT: {
+          OR: [{ creator: { user: { role: "ADMIN" } } }, { brand: { user: { role: "ADMIN" } } }]
+        }
+      },
       include: withLister,
       orderBy: { createdAt: "desc" }
     });

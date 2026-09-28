@@ -32,9 +32,18 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction) {
   }
 }
 
+// ADMIN always passes every role gate below — admin accounts are
+// provisioned with a real DeveloperProfile/CreatorProfile/BrandProfile
+// (see auth.service.ts's adminCreateUser and prisma/seed.ts), so the
+// business logic these routes guard (which looks up "the profile for this
+// userId") works unmodified for an admin acting through their own linked
+// profiles. This is deliberately not a blanket bypass of ownership checks
+// elsewhere (assertIsDeveloper/assertIsCreator/assertIsBuyer) — an admin
+// can act as a developer or creator, but still only on transactions where
+// they're actually the party involved.
 export function requireRole(role: AuthPayload["role"]) {
   return (req: Request, _res: Response, next: NextFunction) => {
-    if (req.auth?.role !== role) {
+    if (req.auth?.role !== role && req.auth?.role !== "ADMIN") {
       throw new UnauthorizedError(`This action requires a ${role.toLowerCase()} account`);
     }
     next();
@@ -45,7 +54,7 @@ export function requireRole(role: AuthPayload["role"]) {
 // something for sale) — requireRole only ever checks a single role.
 export function requireAnyRole(...roles: AuthPayload["role"][]) {
   return (req: Request, _res: Response, next: NextFunction) => {
-    if (!req.auth || !roles.includes(req.auth.role)) {
+    if (!req.auth || (!roles.includes(req.auth.role) && req.auth.role !== "ADMIN")) {
       throw new UnauthorizedError(`This action requires one of: ${roles.join(", ").toLowerCase()}`);
     }
     next();

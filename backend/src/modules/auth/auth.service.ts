@@ -12,6 +12,28 @@ const googleClient = new OAuth2Client(env.googleClientId);
 // profile row — kept in one place so a new signup always gets exactly the
 // eligibility-gated creator profile or empty developer profile it needs,
 // regardless of which path created the account.
+// Shared by adminCreateUser and prisma/seed.ts (which backfills the same
+// bundle onto any admin created before this existed) — an admin's own
+// creator profile is pre-approved directly rather than run through
+// passesEligibilityGate, same as a normal creator's preApprove flag.
+export function adminProfileBundle(name: string, email: string) {
+  const handle = "@" + email.split("@")[0];
+  return {
+    developerProfile: { create: {} },
+    creatorProfile: {
+      create: {
+        handle,
+        platform: "Admin",
+        followerCount: 0,
+        engagementRate: 0,
+        nicheTags: [],
+        gateStatus: "APPROVED" as const
+      }
+    },
+    brandProfile: { create: { companyName: `${name} (Admin)` } }
+  };
+}
+
 function newProfileData(role: "DEVELOPER" | "CREATOR" | "BRAND") {
   if (role === "DEVELOPER") return { developerProfile: { create: {} } };
   if (role === "BRAND") return { brandProfile: { create: { companyName: "" } } };
@@ -121,33 +143,40 @@ export const authService = {
     if (existing) throw new ConflictError("An account with that email already exists");
 
     const passwordHash = await bcrypt.hash(input.password, 10);
+    // ADMIN gets all three profiles at once, pre-approved — an admin
+    // account needs to act as a developer, creator, and brand to actually
+    // exercise (and support) every flow on the platform, not just view
+    // data about them. The other three roles still get exactly one
+    // profile each, matching what self-serve signup would create.
     const profileData =
-      input.role === "DEVELOPER"
-        ? { developerProfile: { create: {} } }
-        : input.role === "BRAND"
-          ? {
-              brandProfile: {
-                create: {
-                  companyName: input.companyName ?? "",
-                  website: input.website || undefined,
-                  industry: input.industry || undefined
-                }
-              }
-            }
-          : input.role === "CREATOR"
+      input.role === "ADMIN"
+        ? adminProfileBundle(input.name, input.email)
+        : input.role === "DEVELOPER"
+          ? { developerProfile: { create: {} } }
+          : input.role === "BRAND"
             ? {
-                creatorProfile: {
+                brandProfile: {
                   create: {
-                    handle: input.handle ?? "",
-                    platform: input.platform ?? "",
-                    followerCount: input.followerCount ?? 0,
-                    engagementRate: input.engagementRate ?? 0,
-                    nicheTags: input.nicheTags ?? [],
-                    gateStatus: (input.preApprove ? "APPROVED" : "PENDING") as "APPROVED" | "PENDING"
+                    companyName: input.companyName ?? "",
+                    website: input.website || undefined,
+                    industry: input.industry || undefined
                   }
                 }
               }
-            : {};
+            : input.role === "CREATOR"
+              ? {
+                  creatorProfile: {
+                    create: {
+                      handle: input.handle ?? "",
+                      platform: input.platform ?? "",
+                      followerCount: input.followerCount ?? 0,
+                      engagementRate: input.engagementRate ?? 0,
+                      nicheTags: input.nicheTags ?? [],
+                      gateStatus: (input.preApprove ? "APPROVED" : "PENDING") as "APPROVED" | "PENDING"
+                    }
+                  }
+                }
+              : {};
 
     const user = await prisma.user.create({
       data: { email: input.email, passwordHash, name: input.name, role: input.role, ...profileData }

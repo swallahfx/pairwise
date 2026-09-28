@@ -43,5 +43,17 @@ export const offersRepository = {
       },
       orderBy: { createdAt: "desc" }
     });
+  },
+  findMineEitherSide(userId: string) {
+    return prisma.offer.findMany({
+      where: { OR: [{ developer: { userId } }, { creator: { userId } }] },
+      include: {
+        creator: { include: { user: { select: { name: true } } } },
+        developer: { include: { user: { select: { name: true } } } },
+        product: true,
+        order: true
+      },
+      orderBy: { createdAt: "desc" }
+    });
   }
 };

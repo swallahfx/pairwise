@@ -38,9 +38,11 @@ export default function MyOrdersPage() {
     <div className="px-14 py-12 max-w-3xl">
       <h1 className="font-display text-3xl font-semibold mb-2">Your orders</h1>
       <p className="text-ink-muted mb-10">
-        {user.role === "DEVELOPER"
-          ? "Fund an agreed order to kick off work, then track it through to payout."
-          : "Track work you've been booked for, from funding through payout."}
+        {user.role === "ADMIN"
+          ? "Every order you're a party to, on either side."
+          : user.role === "DEVELOPER"
+            ? "Fund an agreed order to kick off work, then track it through to payout."
+            : "Track work you've been booked for, from funding through payout."}
       </p>
 
       {isLoading && <p className="text-ink-muted">Loading…</p>}
@@ -52,8 +54,13 @@ export default function MyOrdersPage() {
 
       <div className="border border-border rounded-card bg-surface overflow-hidden">
         {orders?.map((order, i) => {
+          // For most users this is just their fixed role, but an admin's
+          // orders can have them on either side, so it's decided per order
+          // by comparing the actual party rather than the logged-in role.
           const counterparty =
-            user.role === "DEVELOPER" ? order.offer.creator.user.name : order.offer.developer.user.name;
+            order.offer.developer.userId === user.userId
+              ? order.offer.creator.user.name
+              : order.offer.developer.user.name;
           const href = order.status === "AGREED" ? `/checkout/${order.id}` : `/orders/${order.id}`;
           return (
             <Link key={order.id} href={href} className="block">

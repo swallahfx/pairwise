@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
+import { hasRole, useAuth } from "@/lib/auth";
 import { Money } from "@/components/ui/Money";
 import { Rating } from "@/components/ui/Rating";
 import { SaveButton } from "@/components/ui/SaveButton";
@@ -116,12 +116,12 @@ export default function CreatorProfilePage() {
               </div>
               <button
                 onClick={() =>
-                  user?.role === "DEVELOPER" ? bookMutation.mutate(item.id) : router.push("/login")
+                  hasRole(user, "DEVELOPER") ? bookMutation.mutate(item.id) : router.push("/login")
                 }
                 disabled={bookMutation.isPending}
                 className="ml-6 bg-accent text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
               >
-                {bookMutation.isPending ? "Booking…" : user?.role === "DEVELOPER" ? "Book" : "Log in to book"}
+                {bookMutation.isPending ? "Booking…" : hasRole(user, "DEVELOPER") ? "Book" : "Log in to book"}
               </button>
             </div>
           ))}
@@ -134,7 +134,7 @@ export default function CreatorProfilePage() {
           {!showCustomOffer ? (
             <div className="flex items-center justify-between">
               <span className="text-sm text-ink-muted">Need something outside this list?</span>
-              {user?.role === "DEVELOPER" ? (
+              {hasRole(user, "DEVELOPER") ? (
                 <button
                   onClick={() => setShowCustomOffer(true)}
                   className="border border-border text-sm font-semibold px-4 py-2 rounded-lg"

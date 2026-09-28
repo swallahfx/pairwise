@@ -5,7 +5,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
+import { hasRole, useAuth } from "@/lib/auth";
 
 export default function NewRequestPage() {
   const { user, isLoading } = useAuth();
@@ -21,7 +21,7 @@ export default function NewRequestPage() {
       </div>
     );
   }
-  if (user.role !== "DEVELOPER") {
+  if (!hasRole(user, "DEVELOPER")) {
     return <div className="p-14 text-ink-muted">Only developer accounts can post a budget request.</div>;
   }
 

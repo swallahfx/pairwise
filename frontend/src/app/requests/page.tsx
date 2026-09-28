@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
+import { hasRole, useAuth } from "@/lib/auth";
 import { Money } from "@/components/ui/Money";
 import Link from "next/link";
 import { useState } from "react";
@@ -55,7 +55,7 @@ export default function RequestsPage() {
               <span className="text-xs text-ink-muted">Due {new Date(r.deadline).toLocaleDateString()}</span>
               <button
                 onClick={() =>
-                  user?.role === "CREATOR"
+                  hasRole(user, "CREATOR")
                     ? applyMutation.mutate({ requestId: r.id, brief: r.brief })
                     : router.push("/login")
                 }
@@ -64,7 +64,7 @@ export default function RequestsPage() {
               >
                 {appliedIds.includes(r.id)
                   ? "Applied ✓"
-                  : user?.role === "CREATOR"
+                  : hasRole(user, "CREATOR")
                     ? "Apply"
                     : "Log in to apply"}
               </button>

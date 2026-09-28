@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
+import { hasRole, useAuth } from "@/lib/auth";
 import { Money } from "@/components/ui/Money";
 import { PayoutAccountForm } from "@/components/ui/PayoutAccountForm";
 
@@ -31,7 +31,7 @@ export default function BrandMePage() {
       </div>
     );
   }
-  if (user.role !== "BRAND") {
+  if (!hasRole(user, "BRAND")) {
     return <div className="p-14 text-ink-muted">This page is only for brand accounts.</div>;
   }
 

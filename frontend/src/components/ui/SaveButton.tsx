@@ -10,7 +10,7 @@ export function SaveButton({ creatorId, size = "text-sm" }: { creatorId: string;
   const { data: saved } = useQuery({
     queryKey: ["saved-creators"],
     queryFn: api.creators.listSaved,
-    enabled: !!user && user.role !== "ADMIN"
+    enabled: !!user
   });
 
   const isSaved = saved?.some((s) => s.creator.id === creatorId) ?? false;
@@ -24,7 +24,7 @@ export function SaveButton({ creatorId, size = "text-sm" }: { creatorId: string;
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["saved-creators"] })
   });
 
-  if (!user || user.role === "ADMIN") return null;
+  if (!user) return null;
 
   return (
     <button

@@ -61,12 +61,38 @@ async function main() {
     console.log(`seeded creator ${user.email} (${c.gateStatus.toLowerCase()})`);
   }
 
-  await prisma.user.upsert({
+  const adminUser = await prisma.user.upsert({
     where: { email: "admin@example.com" },
     update: {},
     create: { email: "admin@example.com", passwordHash, name: "Platform Admin", role: "ADMIN" }
   });
-  console.log("seeded admin admin@example.com");
+  // An admin needs to act as a developer, creator, and brand to actually
+  // exercise (and support) every flow, not just view data about them —
+  // backfilled here rather than only at create, so an admin row seeded
+  // before this existed still ends up with all three on the next boot.
+  const [hasDeveloper, hasCreator, hasBrand] = await Promise.all([
+    prisma.developerProfile.findUnique({ where: { userId: adminUser.id } }),
+    prisma.creatorProfile.findUnique({ where: { userId: adminUser.id } }),
+    prisma.brandProfile.findUnique({ where: { userId: adminUser.id } })
+  ]);
+  if (!hasDeveloper) await prisma.developerProfile.create({ data: { userId: adminUser.id } });
+  if (!hasCreator) {
+    await prisma.creatorProfile.create({
+      data: {
+        userId: adminUser.id,
+        handle: "@admin",
+        platform: "Admin",
+        followerCount: 0,
+        engagementRate: 0,
+        nicheTags: [],
+        gateStatus: "APPROVED"
+      }
+    });
+  }
+  if (!hasBrand) {
+    await prisma.brandProfile.create({ data: { userId: adminUser.id, companyName: "Platform Admin (Admin)" } });
+  }
+  console.log("seeded admin admin@example.com (developer+creator+brand profiles)");
 
   // ---------------------------------------------------------------------
   // Brands

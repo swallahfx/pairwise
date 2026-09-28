@@ -78,8 +78,8 @@ export interface Order {
   paidAt: string | null;
   offer: {
     deliverable: string;
-    creator: { handle: string; user: { name: string } };
-    developer: { user: { name: string } };
+    creator: { userId: string; handle: string; user: { name: string } };
+    developer: { userId: string; user: { name: string } };
   };
 }
 

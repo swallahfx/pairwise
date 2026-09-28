@@ -11,6 +11,7 @@ import { Offer } from "@/types";
 
 export default function OffersPage() {
   const { user, isLoading } = useAuth();
+  const [viewAs, setViewAs] = useState<"CREATOR" | "DEVELOPER">("CREATOR");
 
   if (isLoading) return <div className="p-14 text-ink-muted">Loading…</div>;
   if (!user) {
@@ -20,6 +21,30 @@ export default function OffersPage() {
           Log in
         </Link>{" "}
         to see your offers.
+      </div>
+    );
+  }
+
+  // An admin holds both a creator and a developer profile, so unlike
+  // everyone else it isn't a fixed choice — let them switch between the
+  // two inboxes rather than guessing which one they want.
+  if (user.role === "ADMIN") {
+    return (
+      <div>
+        <div className="px-14 pt-8 flex gap-2">
+          {(["CREATOR", "DEVELOPER"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setViewAs(v)}
+              className={`px-3.5 py-2 rounded-full text-sm font-semibold border ${
+                viewAs === v ? "bg-accent text-white border-accent" : "bg-surface border-border text-ink-muted"
+              }`}
+            >
+              As {v === "CREATOR" ? "creator" : "developer"}
+            </button>
+          ))}
+        </div>
+        {viewAs === "CREATOR" ? <CreatorOffersInbox /> : <DeveloperRequestsInbox />}
       </div>
     );
   }

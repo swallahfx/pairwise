@@ -62,3 +62,12 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
+
+// ADMIN accounts are provisioned with a real Developer/Creator/Brand
+// profile (see backend's auth.service.ts adminProfileBundle), so every
+// role-gated action or page in the UI should treat ADMIN as satisfying
+// whichever specific role it asks for — mirrors the backend's
+// requireRole/requireAnyRole middleware doing the same thing server-side.
+export function hasRole(user: AuthUser | null, role: AuthUser["role"]): boolean {
+  return user?.role === role || user?.role === "ADMIN";
+}

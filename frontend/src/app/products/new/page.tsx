@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
+import { hasRole, useAuth } from "@/lib/auth";
 
 export default function NewProductPage() {
   const { user, isLoading } = useAuth();
@@ -21,7 +21,7 @@ export default function NewProductPage() {
       </div>
     );
   }
-  if (user.role !== "DEVELOPER") {
+  if (!hasRole(user, "DEVELOPER")) {
     return <div className="p-14 text-ink-muted">Only developer accounts can list products.</div>;
   }
 

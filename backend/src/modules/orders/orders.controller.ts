@@ -9,10 +9,16 @@ export const ordersController = {
   },
   async listMine(req: Request, res: Response) {
     const role = req.auth!.role;
-    if (role !== "DEVELOPER" && role !== "CREATOR") {
+    if (role !== "DEVELOPER" && role !== "CREATOR" && role !== "ADMIN") {
       throw new ForbiddenError("Only developer and creator accounts have orders");
     }
-    const orders = await ordersService.listMine(req.auth!.userId, role);
+    // An admin's own orders can exist on either side (they hold both a
+    // DeveloperProfile and a CreatorProfile), so "mine" means both, not a
+    // forced choice of one.
+    const orders =
+      role === "ADMIN"
+        ? await ordersService.listMineEitherSide(req.auth!.userId)
+        : await ordersService.listMine(req.auth!.userId, role);
     res.json(orders);
   },
   async fund(req: Request, res: Response) {

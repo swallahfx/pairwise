@@ -21,10 +21,13 @@ export const offersController = {
   },
   async listMine(req: Request, res: Response) {
     const role = req.auth!.role;
-    if (role !== "DEVELOPER" && role !== "CREATOR") {
+    if (role !== "DEVELOPER" && role !== "CREATOR" && role !== "ADMIN") {
       throw new ForbiddenError("Only developer and creator accounts have offers");
     }
-    const offers = await offersService.listMine(req.auth!.userId, role);
+    const offers =
+      role === "ADMIN"
+        ? await offersService.listMineEitherSide(req.auth!.userId)
+        : await offersService.listMine(req.auth!.userId, role);
     res.json(offers);
   },
   async accept(req: Request, res: Response) {

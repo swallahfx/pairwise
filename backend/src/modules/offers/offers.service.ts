@@ -83,6 +83,10 @@ export const offersService = {
     return offersRepository.findMine(userId, role);
   },
 
+  listMineEitherSide(userId: string) {
+    return offersRepository.findMineEitherSide(userId);
+  },
+
   // Accepting a PENDING offer (either a custom offer the creator accepts,
   // or a request application the developer picks) always ends the same
   // way: mark it ACCEPTED, close the request if there was one, open an

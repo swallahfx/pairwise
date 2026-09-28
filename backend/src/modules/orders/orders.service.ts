@@ -39,6 +39,10 @@ export const ordersService = {
     return ordersRepository.findMine(userId, role);
   },
 
+  listMineEitherSide(userId: string) {
+    return ordersRepository.findMineEitherSide(userId);
+  },
+
   adminListAll() {
     return ordersRepository.findAll();
   },

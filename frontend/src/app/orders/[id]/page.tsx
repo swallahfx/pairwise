@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
+import { hasRole, useAuth } from "@/lib/auth";
 import { OrderStatus } from "@/types";
 
 const STEPS: { key: OrderStatus[]; label: string }[] = [
@@ -112,7 +112,7 @@ export default function OrderStatusPage() {
         </div>
       </div>
 
-      {user?.role === "CREATOR" && order.status === "FUNDED" && (
+      {hasRole(user, "CREATOR") && order.status === "FUNDED" && (
         <ActionRow
           message="Funded. Start work when you're ready."
           buttonLabel="Start work"
@@ -121,7 +121,7 @@ export default function OrderStatusPage() {
         />
       )}
 
-      {user?.role === "CREATOR" && (order.status === "IN_PROGRESS" || order.status === "REVISION_REQUESTED") && (
+      {hasRole(user, "CREATOR") && (order.status === "IN_PROGRESS" || order.status === "REVISION_REQUESTED") && (
         <ActionRow
           message="Done? Submit for the developer to review."
           buttonLabel="Submit work"
@@ -130,7 +130,7 @@ export default function OrderStatusPage() {
         />
       )}
 
-      {user?.role === "DEVELOPER" && order.status === "SUBMITTED" && (
+      {hasRole(user, "DEVELOPER") && order.status === "SUBMITTED" && (
         <div className="mt-4 bg-surface border border-border rounded-card p-6 flex items-center justify-between gap-4">
           <div className="text-sm font-semibold">Review the delivered work.</div>
           <div className="flex gap-3">
@@ -154,7 +154,7 @@ export default function OrderStatusPage() {
 
       {actionError && <p className="text-sm text-red-600 mt-3">{actionError.message}</p>}
 
-      {user?.role === "DEVELOPER" && order.status === "PAID" && (
+      {hasRole(user, "DEVELOPER") && order.status === "PAID" && (
         <ReviewForm orderId={order.id} creatorName={order.offer.creator.user.name} />
       )}
     </div>

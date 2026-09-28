@@ -59,6 +59,15 @@ export const ordersRepository = {
       orderBy: { createdAt: "desc" }
     });
   },
+  findMineEitherSide(userId: string) {
+    return prisma.order.findMany({
+      where: {
+        offer: { OR: [{ developer: { userId } }, { creator: { userId } }] }
+      },
+      include: withParties,
+      orderBy: { createdAt: "desc" }
+    });
+  },
   findAll() {
     return prisma.order.findMany({ include: withParties, orderBy: { createdAt: "desc" } });
   }

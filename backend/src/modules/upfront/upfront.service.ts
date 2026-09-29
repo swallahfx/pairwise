@@ -79,6 +79,17 @@ export const upfrontService = {
     return upfrontRepository.findByBrand(brand.id);
   },
 
+  async listSalesForLister(userId: string, listerType: "CREATOR" | "BRAND") {
+    if (listerType === "CREATOR") {
+      const creator = await prisma.creatorProfile.findUnique({ where: { userId } });
+      if (!creator) throw new NotFoundError("Creator profile");
+      return upfrontRepository.findPurchasesForLister({ creatorId: creator.id });
+    }
+    const brand = await prisma.brandProfile.findUnique({ where: { userId } });
+    if (!brand) throw new NotFoundError("Brand profile");
+    return upfrontRepository.findPurchasesForLister({ brandId: brand.id });
+  },
+
   // Every listing starts PENDING regardless of lister — there's no
   // automatic eligibility check the way creators.service has one for rate
   // cards, so this queue is simply everything awaiting a first look.

@@ -148,6 +148,18 @@ export const upfrontRepository = {
     });
   },
 
+  // The buyer-facing "findPurchasesMine" has a lister-facing counterpart
+  // here: a creator/brand couldn't otherwise see who bought a slot on
+  // their own listing, or its funding/approval status, since the listing's
+  // own "mine" view only ever showed an aggregate slotsSold count.
+  findPurchasesForLister(listerId: { creatorId: string } | { brandId: string }) {
+    return prisma.upfrontPurchase.findMany({
+      where: { listing: listerId },
+      include: { listing: { select: { title: true } }, buyer: { select: { name: true, email: true } } },
+      orderBy: { createdAt: "desc" }
+    });
+  },
+
   findAllPurchases() {
     return prisma.upfrontPurchase.findMany({
       include: { listing: { include: withLister }, buyer: { select: { name: true, email: true } } },

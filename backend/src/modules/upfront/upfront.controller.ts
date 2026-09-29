@@ -21,6 +21,11 @@ export const upfrontController = {
     res.json(listings);
   },
 
+  async listMySales(req: Request, res: Response) {
+    const sales = await upfrontService.listSalesForLister(req.auth!.userId, listerTypeOf(req.auth!.role));
+    res.json(sales);
+  },
+
   async createListing(req: Request, res: Response) {
     const listing = await upfrontService.createListing(req.auth!.userId, listerTypeOf(req.auth!.role), req.body);
     res.status(201).json(listing);

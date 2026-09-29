@@ -21,6 +21,12 @@ upfrontRouter.post(
   validate(createListingSchema),
   asyncHandler(upfrontController.createListing)
 );
+upfrontRouter.get(
+  "/mine/sales",
+  requireAuth,
+  requireAnyRole("CREATOR", "BRAND"),
+  asyncHandler(upfrontController.listMySales)
+);
 
 upfrontRouter.get("/purchases/mine", requireAuth, asyncHandler(upfrontController.listMyPurchases));
 upfrontRouter.get("/purchases/:id", requireAuth, asyncHandler(upfrontController.getPurchase));

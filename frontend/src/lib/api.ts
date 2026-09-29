@@ -190,6 +190,7 @@ export const api = {
       request<import("@/types").UpfrontListing[]>(`/upfront${niche ? `?niche=${encodeURIComponent(niche)}` : ""}`),
     get: (id: string) => request<import("@/types").UpfrontListing>(`/upfront/${id}`),
     mine: () => request<import("@/types").UpfrontListing[]>("/upfront/mine"),
+    mySales: () => request<import("@/types").UpfrontSale[]>("/upfront/mine/sales"),
     create: (data: {
       title: string;
       niche: string;

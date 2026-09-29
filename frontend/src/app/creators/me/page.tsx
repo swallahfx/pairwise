@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { hasRole, useAuth } from "@/lib/auth";
 import { Money } from "@/components/ui/Money";
 import { PayoutAccountForm } from "@/components/ui/PayoutAccountForm";
+import { UpfrontSalesList } from "@/components/ui/UpfrontSalesList";
 
 const NICHES = ["AI Tools", "Dev Tools", "SaaS", "Indie Apps", "Productivity", "Fintech"];
 const TABS = ["profile", "payouts", "rates", "upfront"] as const;
@@ -361,8 +362,14 @@ function CreatorMeContent() {
             ))}
           </div>
 
+          <h3 className="text-sm font-semibold mb-2 mt-8">Slots sold</h3>
+          <p className="text-sm text-ink-muted mb-3">
+            Everyone who's bought a slot across your listings, and where their payment stands.
+          </p>
+          <UpfrontSalesList />
+
           <form
-            className="bg-surface border border-border rounded-card p-5 space-y-3"
+            className="bg-surface border border-border rounded-card p-5 space-y-3 mt-8"
             onSubmit={(e) => {
               e.preventDefault();
               createListingMutation.mutate();

@@ -182,6 +182,23 @@ export interface UpfrontPurchase {
   review?: UpfrontReview | null;
 }
 
+// What a lister sees for a slot sold against their own listing — unlike
+// UpfrontPurchase (the buyer's view), the listing here is just its title
+// (the lister already knows the rest) and the buyer's identity is what's
+// actually new information.
+export interface UpfrontSale {
+  id: string;
+  priceKobo: number;
+  totalKobo: number;
+  status: UpfrontPurchaseStatus;
+  fundedAt: string | null;
+  approvedAt: string | null;
+  paidAt: string | null;
+  createdAt: string;
+  listing: { title: string };
+  buyer: { name: string; email: string };
+}
+
 export interface AdminUser {
   id: string;
   email: string;

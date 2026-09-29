@@ -35,7 +35,7 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <div className="px-14 py-12 max-w-3xl">
+    <div className="px-4 sm:px-8 lg:px-14 py-12 max-w-3xl">
       <h1 className="font-display text-3xl font-semibold mb-2">Your orders</h1>
       <p className="text-ink-muted mb-10">
         {user.role === "ADMIN"

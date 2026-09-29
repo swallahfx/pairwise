@@ -31,7 +31,7 @@ export default function OffersPage() {
   if (user.role === "ADMIN") {
     return (
       <div>
-        <div className="px-14 pt-8 flex gap-2">
+        <div className="px-4 sm:px-8 lg:px-14 pt-8 flex gap-2">
           {(["CREATOR", "DEVELOPER"] as const).map((v) => (
             <button
               key={v}
@@ -84,7 +84,7 @@ function CreatorOffersInbox() {
   const history = offers?.filter((o) => !(o.status === "PENDING" && o.source === "CUSTOM")) ?? [];
 
   return (
-    <div className="px-14 py-12 max-w-3xl">
+    <div className="px-4 sm:px-8 lg:px-14 py-12 max-w-3xl">
       <h1 className="font-display text-3xl font-semibold mb-2">Offers</h1>
       <p className="text-ink-muted mb-10">
         Custom offers developers sent you directly. Accepting opens an order — the developer funds it next.
@@ -102,13 +102,13 @@ function CreatorOffersInbox() {
         {pendingCustom.map((offer) => (
           <div
             key={offer.id}
-            className="bg-surface border border-border rounded-card p-5 flex items-center justify-between gap-4"
+            className="bg-surface border border-border rounded-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           >
             <div>
               <div className="font-semibold text-[15px]">{offer.deliverable}</div>
               <div className="text-[13px] text-ink-muted mt-0.5">From {offer.developer.user.name}</div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <Money kobo={offer.priceKobo} size="text-xl" />
               <button
                 onClick={() => declineMutation.mutate(offer.id)}
@@ -167,7 +167,7 @@ function DeveloperRequestsInbox() {
   const customSent = sentOffers?.filter((o) => o.source === "CUSTOM") ?? [];
 
   return (
-    <div className="px-14 py-12 max-w-3xl">
+    <div className="px-4 sm:px-8 lg:px-14 py-12 max-w-3xl">
       <h1 className="font-display text-3xl font-semibold mb-2">Your requests & offers</h1>
       <p className="text-ink-muted mb-10">
         Pick an applicant on a request to open an order, or track custom offers you&apos;ve sent.
@@ -184,7 +184,7 @@ function DeveloperRequestsInbox() {
         )}
         {requests?.map((r) => (
           <div key={r.id} className="bg-surface border border-border rounded-card p-5">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div className="font-semibold text-[15px]">{r.product.name}</div>
                 <div className="text-[13px] text-ink-muted mt-0.5">
@@ -208,14 +208,14 @@ function DeveloperRequestsInbox() {
                 {applicantsLoading && <p className="text-sm text-ink-muted">Loading applicants…</p>}
                 {applicants?.length === 0 && <p className="text-sm text-ink-muted">No applicants yet.</p>}
                 {applicants?.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between bg-ground rounded-lg px-4 py-3">
+                  <div key={a.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-ground rounded-lg px-4 py-3">
                     <div>
                       <div className="text-sm font-semibold">{a.creator.user.name}</div>
                       <div className="text-xs text-ink-muted">
                         {a.creator.handle} · {a.deliverable}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <Money kobo={a.priceKobo} size="text-lg" />
                       {a.status === "PENDING" ? (
                         <>

@@ -88,7 +88,7 @@ function BrandMeContent() {
   if (isLoading || !brand) return <div className="p-14 text-ink-muted">Loading…</div>;
 
   return (
-    <div className="px-14 py-12 max-w-3xl">
+    <div className="px-4 sm:px-8 lg:px-14 py-12 max-w-3xl">
       <h1 className="font-display text-3xl font-semibold mb-1">Your brand</h1>
       <p className="text-ink-muted mb-6">{brand.companyName || "Set up your profile below."}</p>
 
@@ -114,7 +114,7 @@ function BrandMeContent() {
           profileMutation.mutate();
         }}
       >
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label className="block text-[13px] font-semibold mb-2">Company name</label>
             <input
@@ -205,7 +205,7 @@ function BrandMeContent() {
             createListingMutation.mutate();
           }}
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[12px] font-semibold mb-1.5">Title</label>
               <input
@@ -251,7 +251,7 @@ function BrandMeContent() {
               required
             />
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <div>
               <label className="block text-[12px] font-semibold mb-1.5">Price per slot (₦)</label>
               <input

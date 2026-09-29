@@ -3,6 +3,7 @@ import { notificationsService } from "../notifications/notifications.service";
 import { qaRepository } from "../qa/qa.repository";
 import { reviewsRepository } from "../reviews/reviews.repository";
 import { creatorsRepository } from "./creators.repository";
+import { AdminUpdateCreatorInput, UpdateCreatorProfileInput } from "./creators.schema";
 
 // Below this many questions ever asked, a reply rate/response time is more
 // noise than signal (one lucky or unlucky data point looks like a trend) —
@@ -22,10 +23,9 @@ async function replyStats(creatorId: string): Promise<{ replyRate: number | null
     : null;
   return { replyRate, avgReplyHours };
 }
-import { AdminUpdateCreatorInput, UpdateCreatorProfileInput } from "./creators.schema";
 
 // The eligibility gate lives here, in one place, so "what does it take to
-// list on Pairwise" is a business rule you can find and change in one spot —
+// list on Pairwize" is a business rule you can find and change in one spot —
 // not scattered across a controller or, worse, enforced only in the UI.
 // Clearing it is necessary but not sufficient: it only unlocks admin
 // review (see listPendingForReview/reviewCreator), not an automatic

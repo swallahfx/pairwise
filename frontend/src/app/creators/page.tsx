@@ -46,7 +46,7 @@ export default function CreatorsDirectoryPage() {
 
   return (
     <div>
-      <div className="px-14 pt-12 pb-7 max-w-3xl">
+      <div className="px-4 sm:px-8 lg:px-14 pt-12 pb-7 max-w-3xl">
         <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight mb-3">
           Find creators who already cover your niche.
         </h1>
@@ -56,7 +56,7 @@ export default function CreatorsDirectoryPage() {
         </p>
       </div>
 
-      <div className="px-14 pb-5 mx-14 flex items-center gap-3 flex-wrap">
+      <div className="px-4 sm:px-8 lg:px-14 pb-5 flex items-center gap-3 flex-wrap">
         <input
           type="search"
           className="input max-w-xs"
@@ -89,7 +89,7 @@ export default function CreatorsDirectoryPage() {
         </div>
       </div>
 
-      <div className="px-14 pb-7 mx-14 border-b border-border flex items-center gap-3 flex-wrap">
+      <div className="px-4 sm:px-8 lg:px-14 pb-7 border-b border-border flex items-center gap-3 flex-wrap">
         {NICHES.map((n) => (
           <Pill key={n} active={selected.includes(n)} onClick={() => toggleNiche(n)}>
             {n}
@@ -97,7 +97,7 @@ export default function CreatorsDirectoryPage() {
         ))}
       </div>
 
-      <div className="px-14 py-12 grid grid-cols-3 gap-6">
+      <div className="px-4 sm:px-8 lg:px-14 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoading && <p className="text-ink-muted">Loading creators…</p>}
         {filtered.map((c) => {
           const cheapest = c.rateCardItems[0];

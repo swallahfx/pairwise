@@ -1,7 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("pairwise_token") : null;
+  const token = typeof window !== "undefined" ? localStorage.getItem("pairwize_token") : null;
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {

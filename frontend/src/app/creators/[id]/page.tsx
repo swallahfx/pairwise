@@ -47,15 +47,15 @@ export default function CreatorProfilePage() {
 
   return (
     <div>
-      <div className="px-14 pt-8">
+      <div className="px-4 sm:px-8 lg:px-14 pt-8">
         <Link href="/creators" className="text-sm text-ink-muted">
           ← All creators
         </Link>
       </div>
 
-      <div className="px-14 py-6 flex items-center justify-between border-b border-border">
+      <div className="px-4 sm:px-8 lg:px-14 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-border">
         <div className="flex items-center gap-5">
-          <div className="w-[88px] h-[88px] rounded-full bg-surface border border-border flex items-center justify-center font-display font-semibold text-3xl">
+          <div className="w-16 h-16 sm:w-[88px] sm:h-[88px] flex-shrink-0 rounded-full bg-surface border border-border flex items-center justify-center font-display font-semibold text-3xl">
             {creator.user.name.split(" ").map((p) => p[0]).join("")}
           </div>
           <div>
@@ -83,7 +83,7 @@ export default function CreatorProfilePage() {
             </div>
           </div>
         </div>
-        <div className="flex gap-10">
+        <div className="flex gap-10 flex-shrink-0">
           <div>
             <div className="font-display text-2xl font-bold">{(creator.followerCount / 1000).toFixed(0)}K</div>
             <div className="text-[13px] text-ink-muted">{creator.platform} followers</div>
@@ -95,7 +95,7 @@ export default function CreatorProfilePage() {
         </div>
       </div>
 
-      <div className="px-14 pt-8 pb-14 max-w-3xl">
+      <div className="px-4 sm:px-8 lg:px-14 pt-8 pb-14 max-w-3xl">
         <h2 className="font-display text-xl font-semibold mb-1">Rate card</h2>
         <p className="text-sm text-ink-muted mb-5">
           Budget different? Send a custom offer instead of booking one of these.

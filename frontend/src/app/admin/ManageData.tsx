@@ -113,7 +113,7 @@ function UsersTable() {
       <Table isLoading={isLoading} empty={data?.length === 0}>
         {data?.map((u: AdminUser) => (
           <Row key={u.id}>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="font-semibold text-[15px]">
                   {u.name} <span className="text-ink-muted font-normal">· {u.email}</span>
@@ -212,7 +212,7 @@ function CreatorsTable() {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="font-semibold text-[15px]">
                     {c.user.name} <span className="text-ink-muted font-normal">· {c.handle}</span>
@@ -265,7 +265,7 @@ function BrandsTable() {
           <Row key={b.id}>
             {editingId === b.id ? (
               <div className="space-y-3">
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   <input className="input" value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} placeholder="Company name" />
                   <input className="input" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="Website" />
                   <input className="input" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} placeholder="Industry" />
@@ -284,7 +284,7 @@ function BrandsTable() {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="font-semibold text-[15px]">{b.companyName}</div>
                   <div className="text-[13px] text-ink-muted mt-0.5">
@@ -340,7 +340,7 @@ function ProductsTable() {
           <Row key={p.id}>
             {editingId === p.id ? (
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" />
                   <input className="input" value={form.niche} onChange={(e) => setForm({ ...form, niche: e.target.value })} placeholder="Niche" />
                 </div>
@@ -359,7 +359,7 @@ function ProductsTable() {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="font-semibold text-[15px]">{p.name}</div>
                   <div className="text-[13px] text-ink-muted mt-0.5">
@@ -407,7 +407,7 @@ function RequestsTable() {
       <Table isLoading={isLoading} empty={data?.length === 0}>
         {data?.map((r: AdvertRequest) => (
           <Row key={r.id}>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="font-semibold text-[15px]">{r.product.name}</div>
                 <div className="text-[13px] text-ink-muted mt-0.5">
@@ -463,7 +463,7 @@ function UpfrontListingsTable() {
             <Row key={l.id}>
               {editingId === l.id ? (
                 <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <input className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Title" />
                     <input
                       className="input"
@@ -498,7 +498,7 @@ function UpfrontListingsTable() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <div className="font-semibold text-[15px]">{l.title}</div>
                     <div className="text-[13px] text-ink-muted mt-0.5">
@@ -556,7 +556,7 @@ function OrdersTable() {
       <Table isLoading={isLoading} empty={data?.length === 0}>
         {data?.map((o: Order) => (
           <Row key={o.id}>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="font-semibold text-[15px]">{o.offer.deliverable}</div>
                 <div className="text-[13px] text-ink-muted mt-0.5">
@@ -617,7 +617,7 @@ function PurchasesTable() {
       <Table isLoading={isLoading} empty={data?.length === 0}>
         {data?.map((p: UpfrontPurchase) => (
           <Row key={p.id}>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="font-semibold text-[15px]">{p.listing.title}</div>
               </div>

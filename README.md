@@ -1,4 +1,4 @@
-# Pairwise — Creator Marketplace for Indie & AI-Built Products
+# Pairwize — Creator Marketplace for Indie & AI-Built Products
 
 A gated marketplace where developers list products and browse creators with
 visible, niche-specific rate cards — priced in Naira, funded and paid

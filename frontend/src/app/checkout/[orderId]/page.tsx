@@ -29,7 +29,7 @@ export default function CheckoutPage() {
   if (!order) return <div className="p-14 text-ink-muted">Order not found.</div>;
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-12 flex gap-14">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 flex flex-col lg:flex-row gap-8 lg:gap-14">
       <div className="flex-1">
         <Link href={`/creators`} className="text-sm text-ink-muted">
           ← Back to directory
@@ -65,7 +65,7 @@ export default function CheckoutPage() {
         )}
       </div>
 
-      <div className="w-[320px] flex-shrink-0">
+      <div className="w-full lg:w-[320px] flex-shrink-0">
         <div className="bg-surface border border-border rounded-card p-6">
           <div className="pb-5 mb-5 border-b border-border">
             <div className="font-semibold text-sm">{order.offer.creator.user.name}</div>

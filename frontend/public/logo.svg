@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
+  <defs>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1687F8"/>
+      <stop offset="100%" stop-color="#0757C8"/>
+    </linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#17D0C1"/>
+      <stop offset="100%" stop-color="#0AA7B5"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Transparent background -->
+  <g transform="translate(300 180)">
+    <!-- Stylized P / pair mark -->
+    <path d="M0 190
+             C0 125 50 75 115 75
+             H300
+             C395 75 470 150 470 245
+             C470 340 395 415 300 415
+             H155
+             C130 415 110 395 110 370
+             V300
+             C110 275 130 255 155 255
+             H300
+             C335 255 365 225 365 190
+             C365 155 335 125 300 125
+             H115
+             C90 125 70 145 70 170
+             V205
+             Z"
+          fill="url(#blue)"/>
+
+    <!-- Lower interlocking form -->
+    <path d="M0 255
+             C0 220 18 188 47 167
+             C70 150 96 142 125 142
+             C160 142 188 158 208 183
+             L267 242
+             C287 262 315 275 345 275
+             H380
+             V330
+             C380 397 326 450 259 450
+             H70
+             C31 450 0 419 0 380
+             Z"
+          fill="url(#teal)"/>
+
+    <!-- Two people / pair dots -->
+    <circle cx="125" cy="190" r="48" fill="white"/>
+    <circle cx="125" cy="190" r="35" fill="url(#blue)"/>
+    <circle cx="290" cy="235" r="48" fill="white"/>
+    <circle cx="290" cy="235" r="35" fill="url(#teal)"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="600" y="930"
+        text-anchor="middle"
+        font-family="Inter, Arial, Helvetica, sans-serif"
+        font-size="150"
+        font-weight="800"
+        letter-spacing="-6"
+        fill="#102E6B">Pairwize</text>
+</svg>

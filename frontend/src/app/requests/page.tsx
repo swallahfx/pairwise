@@ -21,7 +21,7 @@ export default function RequestsPage() {
   });
 
   return (
-    <div className="px-14 py-12">
+    <div className="px-4 sm:px-8 lg:px-14 py-12">
       <div className="flex items-start justify-between max-w-3xl">
         <div>
           <h1 className="font-display text-4xl font-semibold mb-3">Open requests, budget included.</h1>
@@ -38,7 +38,7 @@ export default function RequestsPage() {
 
       {isLoading && <p className="text-ink-muted">Loading…</p>}
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {requests?.map((r) => (
           <div key={r.id} className="bg-surface border border-border rounded-card p-6 flex flex-col gap-3.5">
             <div className="flex items-start justify-between gap-3">

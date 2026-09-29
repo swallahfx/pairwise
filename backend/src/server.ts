@@ -4,7 +4,7 @@ import { ordersService } from "./modules/orders/orders.service";
 import { upfrontService } from "./modules/upfront/upfront.service";
 
 app.listen(env.port, () => {
-  console.log(`Pairwise API listening on :${env.port}`);
+  console.log(`Pairwize API listening on :${env.port}`);
 });
 
 // Sweeps for orders stuck in SUBMITTED past the 7-day auto-approve window,

@@ -29,7 +29,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className={`px-14 py-12 ${tab === "manage" || tab === "analytics" ? "max-w-5xl" : "max-w-3xl"}`}>
+    <div className={`px-4 sm:px-8 lg:px-14 py-12 ${tab === "manage" || tab === "analytics" ? "max-w-5xl" : "max-w-3xl"}`}>
       <h1 className="font-display text-3xl font-semibold mb-6">Admin</h1>
 
       <div className="flex gap-2 mb-8 border-b border-border">
@@ -96,7 +96,7 @@ function PendingCreatorsQueue() {
 
       <div className="space-y-3">
         {pending?.map((c) => (
-          <div key={c.id} className="bg-surface border border-border rounded-card p-5 flex items-center justify-between gap-4">
+          <div key={c.id} className="bg-surface border border-border rounded-card p-5 flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="font-semibold text-[15px]">{c.user.name}</div>
               <div className="text-[13px] text-ink-muted mt-0.5">
@@ -165,7 +165,7 @@ function PendingListingsQueue() {
           const listerName = l.listerType === "CREATOR" ? l.creator?.user.name : l.brand?.companyName;
           return (
             <div key={l.id} className="bg-surface border border-border rounded-card p-5">
-              <div className="flex items-start justify-between gap-4 mb-3">
+              <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
                 <div>
                   <div className="font-semibold text-[15px]">{l.title}</div>
                   <div className="text-[13px] text-ink-muted mt-0.5">
@@ -308,7 +308,7 @@ function CreateUserForm() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
           <label className="block text-[13px] font-semibold mb-2">Name</label>
           <input
@@ -343,7 +343,7 @@ function CreateUserForm() {
 
       {form.role === "CREATOR" && (
         <div className="border-t border-border pt-5 space-y-5">
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label className="block text-[13px] font-semibold mb-2">Handle</label>
               <input
@@ -411,7 +411,7 @@ function CreateUserForm() {
       )}
 
       {form.role === "BRAND" && (
-        <div className="border-t border-border pt-5 grid grid-cols-2 gap-5">
+        <div className="border-t border-border pt-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label className="block text-[13px] font-semibold mb-2">Company name</label>
             <input

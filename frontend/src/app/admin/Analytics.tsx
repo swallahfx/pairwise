@@ -11,7 +11,7 @@ export function Analytics() {
 
   return (
     <div>
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <StatCard label="Total GMV (paid)">
           <Money kobo={data.gmvKobo} size="text-2xl" />
         </StatCard>
@@ -28,7 +28,7 @@ export function Analytics() {
         </StatCard>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <BreakdownCard title="Orders by status" rows={data.ordersByStatus} />
         <BreakdownCard title="Upfront purchases by status" rows={data.purchasesByStatus} />
         <BreakdownCard title="Users by role" rows={data.usersByRole.map((r) => ({ status: r.role, count: r.count }))} />

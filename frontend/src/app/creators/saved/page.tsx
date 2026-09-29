@@ -29,7 +29,7 @@ export default function SavedCreatorsPage() {
   }
 
   return (
-    <div className="px-14 py-12">
+    <div className="px-4 sm:px-8 lg:px-14 py-12">
       <h1 className="font-display text-3xl font-semibold mb-1">Saved creators</h1>
       <p className="text-ink-muted mb-8">Creators you've bookmarked for later.</p>
 
@@ -40,7 +40,7 @@ export default function SavedCreatorsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {saved?.map(({ creator: c }) => {
           const cheapest = c.rateCardItems[0];
           return (

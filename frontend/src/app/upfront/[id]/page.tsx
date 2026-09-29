@@ -34,12 +34,12 @@ export default function UpfrontListingPage() {
   const isOwner = !!listerUserId && user?.userId === listerUserId;
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-12">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
       <Link href="/upfront" className="text-sm text-ink-muted">
         ← All programs
       </Link>
 
-      <div className="mt-5 flex items-start justify-between gap-6">
+      <div className="mt-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-6">
         <div>
           <h1 className="font-display text-[28px] font-bold">{listing.title}</h1>
           <div className="text-[15px] text-ink-muted mt-1">
@@ -55,7 +55,7 @@ export default function UpfrontListingPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mt-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
         <div className="bg-surface border border-border rounded-card p-5">
           <div className="text-[13px] font-semibold text-ink-muted mb-1.5">The program</div>
           <p className="text-sm leading-relaxed">{listing.description}</p>
@@ -66,7 +66,7 @@ export default function UpfrontListingPage() {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-between bg-surface border border-border rounded-card p-5">
+      <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface border border-border rounded-card p-5">
         <div>
           <div className="text-sm font-semibold">
             {soldOut ? "Sold out" : `${remaining} of ${listing.totalSlots} slots remaining`}

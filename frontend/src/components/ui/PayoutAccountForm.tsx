@@ -65,7 +65,7 @@ export function PayoutAccountForm({
         </div>
       ) : (
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[12px] font-semibold mb-1.5">Bank</label>
               <select

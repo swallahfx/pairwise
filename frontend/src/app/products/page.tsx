@@ -32,7 +32,7 @@ export default function ProductsPage() {
   }, [products, niche, monetizationStatus, search]);
 
   return (
-    <div className="px-14 py-12">
+    <div className="px-4 sm:px-8 lg:px-14 py-12">
       <h1 className="font-display text-4xl font-semibold mb-3">See what&apos;s being built.</h1>
       <p className="text-ink-muted mb-7 max-w-xl">
         Real traction, not just a pitch — creators can check what a product actually does before they
@@ -75,7 +75,7 @@ export default function ProductsPage() {
 
       {isLoading && <p className="text-ink-muted">Loading…</p>}
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((p) => (
           <Link key={p.id} href={`/products/${p.id}`} className="block">
             <div className="bg-surface border border-border rounded-card p-6 flex flex-col gap-4 h-full">

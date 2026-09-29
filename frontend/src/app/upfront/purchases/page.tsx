@@ -50,7 +50,7 @@ export default function MyUpfrontPurchasesPage() {
   }
 
   return (
-    <div className="px-14 py-12 max-w-3xl">
+    <div className="px-4 sm:px-8 lg:px-14 py-12 max-w-3xl">
       <h1 className="font-display text-3xl font-semibold mb-2">Your Upfront purchases</h1>
       <p className="text-ink-muted mb-10">
         Slots you've reserved in future programs. Confirm once a program has run to release payment — it
@@ -77,7 +77,7 @@ export default function MyUpfrontPurchasesPage() {
           const href = purchase.status === "AGREED" ? `/upfront/checkout/${purchase.id}` : undefined;
           const row = (
             <div
-              className={`flex items-center justify-between px-6 py-4 ${
+              className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 ${
                 href ? "hover:bg-ground/50" : ""
               } ${i < purchases.length - 1 ? "border-b border-border" : ""}`}
             >
@@ -85,7 +85,7 @@ export default function MyUpfrontPurchasesPage() {
                 <div className="text-[15px] font-semibold">{purchase.listing.title}</div>
                 <div className="text-[13px] text-ink-muted mt-0.5">{listerName}</div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 {purchase.status === "FUNDED" && (
                   <button
                     onClick={(e) => {

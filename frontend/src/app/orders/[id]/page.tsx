@@ -50,13 +50,13 @@ export default function OrderStatusPage() {
     | undefined;
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-12">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
       <div className="text-[13px] text-ink-muted mb-1">
         Order #{order.id.slice(0, 8)} · {order.offer.creator.user.name}
       </div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="font-display text-[28px] font-semibold">{order.offer.deliverable}</h1>
-        <div className="text-right">
+        <div className="text-left sm:text-right flex-shrink-0">
           <div className="font-display text-3xl font-bold text-money">
             ₦{(order.priceKobo / 100).toLocaleString("en-NG")}
           </div>

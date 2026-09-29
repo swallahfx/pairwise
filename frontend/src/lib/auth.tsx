@@ -17,8 +17,8 @@ interface AuthContextValue {
   logout: () => void;
 }
 
-const TOKEN_KEY = "pairwise_token";
-const USER_KEY = "pairwise_user";
+const TOKEN_KEY = "pairwize_token";
+const USER_KEY = "pairwize_user";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 

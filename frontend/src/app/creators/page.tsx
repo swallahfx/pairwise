@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
@@ -10,16 +10,18 @@ import { Rating } from "@/components/ui/Rating";
 import { SaveButton } from "@/components/ui/SaveButton";
 
 const NICHES = ["AI Tools", "Dev Tools", "SaaS", "Indie Apps", "Productivity", "Fintech"];
+const PAGE_SIZE = 9;
 
 export default function CreatorsDirectoryPage() {
   const [selected, setSelected] = useState<string[]>([]);
-  const [sort, setSort] = useState<"price_asc" | "price_desc">("price_asc");
+  const [sort, setSort] = useState<"top" | "price_asc" | "price_desc">("top");
   const [platform, setPlatform] = useState("all");
   const [search, setSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const { data: creators, isLoading } = useQuery({
     queryKey: ["creators", sort],
-    queryFn: () => api.creators.list({ sort })
+    queryFn: () => api.creators.list(sort === "top" ? {} : { sort })
   });
 
   const platforms = useMemo(
@@ -30,7 +32,7 @@ export default function CreatorsDirectoryPage() {
   const filtered = useMemo(() => {
     if (!creators) return [];
     const query = search.trim().toLowerCase();
-    return creators.filter((c) => {
+    const matches = creators.filter((c) => {
       if (selected.length > 0 && !c.nicheTags.some((t) => selected.includes(t))) return false;
       if (platform !== "all" && c.platform !== platform) return false;
       if (query && !c.user.name.toLowerCase().includes(query) && !c.handle.toLowerCase().includes(query)) {
@@ -38,7 +40,28 @@ export default function CreatorsDirectoryPage() {
       }
       return true;
     });
-  }, [creators, selected, platform, search]);
+    if (sort !== "top") return matches;
+    // "Top rated" ranks reviewed creators (best rating, then most reviews)
+    // ahead of unreviewed ones, who fall back to follower count so the
+    // directory isn't front-loaded with untested profiles.
+    return [...matches].sort((a, b) => {
+      const aReviewed = (a.reviewCount ?? 0) > 0;
+      const bReviewed = (b.reviewCount ?? 0) > 0;
+      if (aReviewed !== bReviewed) return aReviewed ? -1 : 1;
+      if (aReviewed && bReviewed) {
+        const ratingDiff = (b.avgRating ?? 0) - (a.avgRating ?? 0);
+        if (ratingDiff !== 0) return ratingDiff;
+        if (a.reviewCount !== b.reviewCount) return (b.reviewCount ?? 0) - (a.reviewCount ?? 0);
+      }
+      return b.followerCount - a.followerCount;
+    });
+  }, [creators, selected, platform, search, sort]);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [selected, platform, search, sort]);
+
+  const visible = filtered.slice(0, visibleCount);
 
   function toggleNiche(name: string) {
     setSelected((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
@@ -81,8 +104,9 @@ export default function CreatorsDirectoryPage() {
           <select
             className="border border-border rounded-lg px-3 py-2 text-sm bg-surface"
             value={sort}
-            onChange={(e) => setSort(e.target.value as "price_asc" | "price_desc")}
+            onChange={(e) => setSort(e.target.value as "top" | "price_asc" | "price_desc")}
           >
+            <option value="top">Top rated</option>
             <option value="price_asc">Price: low to high</option>
             <option value="price_desc">Price: high to low</option>
           </select>
@@ -99,7 +123,7 @@ export default function CreatorsDirectoryPage() {
 
       <div className="px-4 sm:px-8 lg:px-14 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoading && <p className="text-ink-muted">Loading creators…</p>}
-        {filtered.map((c) => {
+        {visible.map((c) => {
           const cheapest = c.rateCardItems[0];
           return (
             <Link key={c.id} href={`/creators/${c.id}`} className="block">
@@ -139,9 +163,19 @@ export default function CreatorsDirectoryPage() {
           );
         })}
         {!isLoading && filtered.length === 0 && (
-          <div className="col-span-3 py-16 text-center text-ink-muted">No creators match those niches yet.</div>
+          <div className="col-span-full py-16 text-center text-ink-muted">No creators match those niches yet.</div>
         )}
       </div>
+      {filtered.length > visibleCount && (
+        <div className="px-4 sm:px-8 lg:px-14 pb-16 flex justify-center">
+          <button
+            onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
+            className="border border-border rounded-lg px-6 py-2.5 text-sm font-semibold hover:bg-surface"
+          >
+            Load more creators
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -15,7 +15,7 @@ function statusPill(status: UpfrontPurchaseStatus) {
     ? "bg-money text-white"
     : problem
       ? "bg-red-600 text-white"
-      : "bg-ground border border-border text-ink-muted";
+      : "bg-accent/10 text-accent";
   return <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${styles}`}>{status.replace("_", " ")}</span>;
 }
 
@@ -93,7 +93,7 @@ export default function MyUpfrontPurchasesPage() {
                       approveMutation.mutate(purchase.id);
                     }}
                     disabled={approveMutation.isPending}
-                    className="bg-accent text-white text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-60"
+                    className="bg-gradient-to-r from-accent to-accent-teal text-white text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-60"
                   >
                     Confirm delivered
                   </button>
@@ -170,7 +170,7 @@ function ReviewRow({ purchase }: { purchase: UpfrontPurchase }) {
             key={n}
             onClick={() => setRating(n)}
             className={`w-8 h-8 rounded-lg border text-sm font-bold ${
-              n <= rating ? "bg-accent text-white border-accent" : "bg-surface border-border text-ink-muted"
+              n <= rating ? "bg-gradient-to-r from-accent to-accent-teal text-white border-accent" : "bg-surface border-border text-ink-muted"
             }`}
           >
             {n}
@@ -189,7 +189,7 @@ function ReviewRow({ purchase }: { purchase: UpfrontPurchase }) {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="bg-accent text-white text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-60"
+          className="bg-gradient-to-r from-accent to-accent-teal text-white text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-60"
         >
           {mutation.isPending ? "Submitting…" : "Submit review"}
         </button>

@@ -37,7 +37,7 @@ export default function OffersPage() {
               key={v}
               onClick={() => setViewAs(v)}
               className={`px-3.5 py-2 rounded-full text-sm font-semibold border ${
-                viewAs === v ? "bg-accent text-white border-accent" : "bg-surface border-border text-ink-muted"
+                viewAs === v ? "bg-gradient-to-r from-accent to-accent-teal text-white border-accent" : "bg-surface border-border text-ink-muted"
               }`}
             >
               As {v === "CREATOR" ? "creator" : "developer"}
@@ -54,10 +54,10 @@ export default function OffersPage() {
 
 function statusPill(status: string) {
   const styles: Record<string, string> = {
-    PENDING: "bg-ground border border-border text-ink-muted",
+    PENDING: "bg-accent/10 text-accent",
     ACCEPTED: "bg-money text-white",
     DECLINED: "bg-red-600 text-white",
-    COUNTERED: "bg-ground border border-border text-ink-muted"
+    COUNTERED: "bg-accent/10 text-accent"
   };
   return (
     <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${styles[status] ?? styles.PENDING}`}>
@@ -124,7 +124,7 @@ function CreatorOffersInbox() {
                   })
                 }
                 disabled={acceptMutation.isPending || declineMutation.isPending}
-                className="bg-accent text-white text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-60"
+                className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-60"
               >
                 Accept
               </button>
@@ -229,7 +229,7 @@ function DeveloperRequestsInbox() {
                           <button
                             onClick={() => acceptMutation.mutate(a.id)}
                             disabled={acceptMutation.isPending || declineMutation.isPending}
-                            className="bg-accent text-white text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-60"
+                            className="bg-gradient-to-r from-accent to-accent-teal text-white text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-60"
                           >
                             Accept & fund
                           </button>

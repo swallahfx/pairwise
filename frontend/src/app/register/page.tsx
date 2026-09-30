@@ -63,7 +63,7 @@ export default function RegisterPage() {
                 key={role}
                 onClick={() => setForm({ ...form, role })}
                 className={`flex-1 py-2.5 rounded-lg text-sm font-semibold border ${
-                  form.role === role ? "bg-accent text-white border-accent" : "bg-surface border-border"
+                  form.role === role ? "bg-gradient-to-r from-accent to-accent-teal text-white border-accent" : "bg-surface border-border"
                 }`}
               >
                 {role === "DEVELOPER" ? "Developer" : role === "CREATOR" ? "Creator" : "Brand"}
@@ -104,7 +104,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="w-full bg-accent text-white py-3.5 rounded-lg font-semibold text-[15px] disabled:opacity-60"
+          className="w-full bg-gradient-to-r from-accent to-accent-teal text-white py-3.5 rounded-lg font-semibold text-[15px] disabled:opacity-60"
         >
           {mutation.isPending ? "Creating…" : "Create account"}
         </button>

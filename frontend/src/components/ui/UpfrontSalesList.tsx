@@ -12,7 +12,7 @@ function statusPill(status: UpfrontPurchaseStatus) {
     ? "bg-money text-white"
     : problem
       ? "bg-red-600 text-white"
-      : "bg-ground border border-border text-ink-muted";
+      : "bg-accent/10 text-accent";
   return <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${styles}`}>{status.replace("_", " ")}</span>;
 }
 

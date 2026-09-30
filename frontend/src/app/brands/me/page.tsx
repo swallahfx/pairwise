@@ -148,7 +148,7 @@ function BrandMeContent() {
         <button
           type="submit"
           disabled={profileMutation.isPending}
-          className="bg-accent text-white text-sm font-semibold px-5 py-2.5 rounded-lg disabled:opacity-60"
+          className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-5 py-2.5 rounded-lg disabled:opacity-60"
         >
           {profileMutation.isPending ? "Saving…" : "Save profile"}
         </button>
@@ -293,7 +293,7 @@ function BrandMeContent() {
           <button
             type="submit"
             disabled={createListingMutation.isPending}
-            className="bg-accent text-white text-sm font-semibold px-4 py-3 rounded-lg disabled:opacity-40"
+            className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-3 rounded-lg disabled:opacity-40"
           >
             {createListingMutation.isPending ? "Submitting…" : "Submit for review"}
           </button>
@@ -310,7 +310,7 @@ function BrandMeContent() {
 function ListingStatusPill({ status }: { status: string }) {
   const styles: Record<string, string> = {
     APPROVED: "bg-money text-white",
-    PENDING: "bg-ground border border-border text-ink-muted",
+    PENDING: "bg-accent/10 text-accent",
     REJECTED: "bg-red-600 text-white"
   };
   return (

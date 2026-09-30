@@ -9,7 +9,7 @@ export function Pill({
 }) {
   const base = "px-4 py-2 rounded-full text-sm border font-medium";
   const classes = active
-    ? `${base} bg-accent text-white border-accent`
+    ? `${base} bg-gradient-to-r from-accent to-accent-teal text-white border-accent`
     : `${base} bg-surface text-ink border-border`;
   return onClick ? (
     <button onClick={onClick} className={classes}>

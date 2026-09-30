@@ -80,14 +80,14 @@ export default function UpfrontListingPage() {
           <button
             onClick={() => buyMutation.mutate()}
             disabled={soldOut || buyMutation.isPending}
-            className="bg-accent text-white text-sm font-semibold px-5 py-2.5 rounded-lg disabled:opacity-40 flex-shrink-0"
+            className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-5 py-2.5 rounded-lg disabled:opacity-40 flex-shrink-0"
           >
             {buyMutation.isPending ? "Reserving…" : "Buy a slot"}
           </button>
         ) : (
           <button
             onClick={() => router.push("/login")}
-            className="bg-accent text-white text-sm font-semibold px-5 py-2.5 rounded-lg flex-shrink-0"
+            className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-5 py-2.5 rounded-lg flex-shrink-0"
           >
             Log in to buy
           </button>

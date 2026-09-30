@@ -107,7 +107,7 @@ export function PayoutAccountForm({
               <button
                 onClick={() => saveMutation.mutate()}
                 disabled={saveMutation.isPending}
-                className="bg-accent text-white text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-60"
+                className="bg-gradient-to-r from-accent to-accent-teal text-white text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-60"
               >
                 {saveMutation.isPending ? "Saving…" : "This is me — save"}
               </button>
@@ -118,7 +118,7 @@ export function PayoutAccountForm({
               disabled={
                 resolveMutation.isPending || !payoutForm.bankCode || payoutForm.accountNumber.length !== 10
               }
-              className="bg-accent text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-40"
+              className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-40"
             >
               {resolveMutation.isPending ? "Verifying…" : "Verify account"}
             </button>

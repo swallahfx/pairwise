@@ -119,7 +119,7 @@ export default function CreatorProfilePage() {
                   hasRole(user, "DEVELOPER") ? bookMutation.mutate(item.id) : router.push("/login")
                 }
                 disabled={bookMutation.isPending}
-                className="ml-6 bg-accent text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
+                className="ml-6 bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
               >
                 {bookMutation.isPending ? "Booking…" : hasRole(user, "DEVELOPER") ? "Book" : "Log in to book"}
               </button>
@@ -185,7 +185,7 @@ export default function CreatorProfilePage() {
                 <button
                   type="submit"
                   disabled={customOfferMutation.isPending}
-                  className="bg-accent text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
+                  className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
                 >
                   {customOfferMutation.isPending ? "Sending…" : "Send offer"}
                 </button>

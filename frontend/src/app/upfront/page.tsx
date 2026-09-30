@@ -36,14 +36,16 @@ export default function UpfrontDirectoryPage() {
 
   return (
     <div>
-      <div className="px-4 sm:px-8 lg:px-14 pt-12 pb-7 max-w-3xl">
-        <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight mb-3">
-          Reserve a slot before it exists.
-        </h1>
-        <p className="text-ink-muted text-base leading-relaxed">
-          Creators and brands list upcoming programs with a described audience — pay upfront to reserve a
-          slot, funds release once the program actually runs.
-        </p>
+      <div className="bg-gradient-to-br from-accent/5 to-accent-teal/5">
+        <div className="px-4 sm:px-8 lg:px-14 pt-12 pb-7 max-w-3xl">
+          <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight mb-3">
+            Reserve a slot before it exists.
+          </h1>
+          <p className="text-ink-muted text-base leading-relaxed">
+            Creators and brands list upcoming programs with a described audience — pay upfront to
+            reserve a slot, funds release once the program actually runs.
+          </p>
+        </div>
       </div>
 
       <div className="px-4 sm:px-8 lg:px-14 pb-5 flex items-center gap-3 flex-wrap">

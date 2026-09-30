@@ -105,7 +105,7 @@ function NewRequestForm() {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="w-full bg-accent text-white py-3.5 rounded-lg font-semibold text-[15px] disabled:opacity-60"
+          className="w-full bg-gradient-to-r from-accent to-accent-teal text-white py-3.5 rounded-lg font-semibold text-[15px] disabled:opacity-60"
         >
           {mutation.isPending ? "Posting…" : "Post to creators"}
         </button>

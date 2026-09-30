@@ -118,7 +118,7 @@ function PendingCreatorsQueue() {
               <button
                 onClick={() => approveMutation.mutate(c.id)}
                 disabled={approveMutation.isPending || rejectMutation.isPending}
-                className="bg-accent text-white text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-60"
+                className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-60"
               >
                 Approve
               </button>
@@ -184,7 +184,7 @@ function PendingListingsQueue() {
                   <button
                     onClick={() => approveMutation.mutate(l.id)}
                     disabled={approveMutation.isPending || rejectMutation.isPending}
-                    className="bg-accent text-white text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-60"
+                    className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-60"
                   >
                     Approve
                   </button>
@@ -299,7 +299,7 @@ function CreateUserForm() {
               key={role}
               onClick={() => setForm({ ...form, role })}
               className={`flex-1 py-2.5 rounded-lg text-sm font-semibold border ${
-                form.role === role ? "bg-accent text-white border-accent" : "bg-surface border-border"
+                form.role === role ? "bg-gradient-to-r from-accent to-accent-teal text-white border-accent" : "bg-surface border-border"
               }`}
             >
               {role[0] + role.slice(1).toLowerCase()}
@@ -391,7 +391,7 @@ function CreateUserForm() {
                   key={n}
                   onClick={() => toggleNiche(n)}
                   className={`px-3.5 py-2 rounded-full text-sm border font-medium ${
-                    form.nicheTags.includes(n) ? "bg-accent text-white border-accent" : "bg-ground border-border"
+                    form.nicheTags.includes(n) ? "bg-gradient-to-r from-accent to-accent-teal text-white border-accent" : "bg-ground border-border"
                   }`}
                 >
                   {n}
@@ -446,7 +446,7 @@ function CreateUserForm() {
       <button
         type="submit"
         disabled={createMutation.isPending}
-        className="bg-accent text-white text-sm font-semibold px-5 py-2.5 rounded-lg disabled:opacity-60"
+        className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-5 py-2.5 rounded-lg disabled:opacity-60"
       >
         {createMutation.isPending ? "Creating…" : "Create account"}
       </button>

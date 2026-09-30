@@ -218,7 +218,7 @@ function CreatorMeContent() {
                     key={n}
                     onClick={() => toggleNiche(n)}
                     className={`px-3.5 py-2 rounded-full text-sm border font-medium ${
-                      form.nicheTags.includes(n) ? "bg-accent text-white border-accent" : "bg-ground border-border"
+                      form.nicheTags.includes(n) ? "bg-gradient-to-r from-accent to-accent-teal text-white border-accent" : "bg-ground border-border"
                     }`}
                   >
                     {n}
@@ -229,7 +229,7 @@ function CreatorMeContent() {
             <button
               type="submit"
               disabled={profileMutation.isPending}
-              className="bg-accent text-white text-sm font-semibold px-5 py-2.5 rounded-lg disabled:opacity-60"
+              className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-5 py-2.5 rounded-lg disabled:opacity-60"
             >
               {profileMutation.isPending ? "Saving…" : "Save profile"}
             </button>
@@ -321,7 +321,7 @@ function CreatorMeContent() {
             <button
               type="submit"
               disabled={!isApproved || addItemMutation.isPending}
-              className="bg-accent text-white text-sm font-semibold px-4 py-3 rounded-lg disabled:opacity-40"
+              className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-3 rounded-lg disabled:opacity-40"
             >
               Add
             </button>
@@ -456,7 +456,7 @@ function CreatorMeContent() {
             <button
               type="submit"
               disabled={!isApproved || createListingMutation.isPending}
-              className="bg-accent text-white text-sm font-semibold px-4 py-3 rounded-lg disabled:opacity-40"
+              className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-3 rounded-lg disabled:opacity-40"
             >
               {createListingMutation.isPending ? "Submitting…" : "Submit for review"}
             </button>
@@ -476,7 +476,7 @@ function CreatorMeContent() {
 function GateBadge({ status }: { status?: string }) {
   const styles: Record<string, string> = {
     APPROVED: "bg-money text-white",
-    PENDING: "bg-ground border border-border text-ink-muted",
+    PENDING: "bg-accent/10 text-accent",
     REJECTED: "bg-red-600 text-white"
   };
   return (
@@ -489,7 +489,7 @@ function GateBadge({ status }: { status?: string }) {
 function ListingStatusPill({ status }: { status: string }) {
   const styles: Record<string, string> = {
     APPROVED: "bg-money text-white",
-    PENDING: "bg-ground border border-border text-ink-muted",
+    PENDING: "bg-accent/10 text-accent",
     REJECTED: "bg-red-600 text-white"
   };
   return (

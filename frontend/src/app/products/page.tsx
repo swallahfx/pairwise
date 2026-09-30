@@ -32,14 +32,16 @@ export default function ProductsPage() {
   }, [products, niche, monetizationStatus, search]);
 
   return (
-    <div className="px-4 sm:px-8 lg:px-14 py-12">
-      <h1 className="font-display text-4xl font-semibold mb-3">See what&apos;s being built.</h1>
-      <p className="text-ink-muted mb-7 max-w-xl">
-        Real traction, not just a pitch — creators can check what a product actually does before they
-        respond to a request.
-      </p>
+    <div>
+      <div className="bg-gradient-to-br from-accent/5 to-accent-teal/5 px-4 sm:px-8 lg:px-14 pt-12 pb-7">
+        <h1 className="font-display text-4xl font-semibold mb-3">See what&apos;s being built.</h1>
+        <p className="text-ink-muted max-w-xl">
+          Real traction, not just a pitch — creators can check what a product actually does before they
+          respond to a request.
+        </p>
+      </div>
 
-      <div className="pb-7 mb-3 border-b border-border flex items-center gap-3 flex-wrap">
+      <div className="px-4 sm:px-8 lg:px-14 pt-5 pb-7 mb-3 border-b border-border flex items-center gap-3 flex-wrap">
         <input
           type="search"
           className="input max-w-xs"
@@ -73,6 +75,7 @@ export default function ProductsPage() {
         </select>
       </div>
 
+      <div className="px-4 sm:px-8 lg:px-14 pb-12">
       {isLoading && <p className="text-ink-muted">Loading…</p>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -98,6 +101,7 @@ export default function ProductsPage() {
         {!isLoading && filtered.length === 0 && (
           <div className="col-span-3 py-16 text-center text-ink-muted">No products match those filters.</div>
         )}
+      </div>
       </div>
     </div>
   );

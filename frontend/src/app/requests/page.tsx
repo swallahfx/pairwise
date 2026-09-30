@@ -30,7 +30,7 @@ export default function RequestsPage() {
           </p>
         </div>
         <Link href="/requests/new">
-          <button className="bg-accent text-white text-sm font-semibold px-5 py-2.5 rounded-lg">
+          <button className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-5 py-2.5 rounded-lg">
             Post a request
           </button>
         </Link>
@@ -60,7 +60,7 @@ export default function RequestsPage() {
                     : router.push("/login")
                 }
                 disabled={appliedIds.includes(r.id) || applyMutation.isPending}
-                className="bg-accent text-white text-xs font-semibold px-4 py-2 rounded-lg disabled:opacity-50"
+                className="bg-gradient-to-r from-accent to-accent-teal text-white text-xs font-semibold px-4 py-2 rounded-lg disabled:opacity-50"
               >
                 {appliedIds.includes(r.id)
                   ? "Applied ✓"

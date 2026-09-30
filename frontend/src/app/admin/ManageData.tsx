@@ -49,7 +49,7 @@ export function ManageData() {
             key={e}
             onClick={() => setEntity(e)}
             className={`px-3 py-1.5 rounded-full text-[13px] font-semibold border ${
-              entity === e ? "bg-accent text-white border-accent" : "bg-surface border-border text-ink-muted"
+              entity === e ? "bg-gradient-to-r from-accent to-accent-teal text-white border-accent" : "bg-surface border-border text-ink-muted"
             }`}
           >
             {ENTITY_LABELS[e]}
@@ -202,7 +202,7 @@ function CreatorsTable() {
                   <button
                     onClick={() => updateMutation.mutate(c.id)}
                     disabled={updateMutation.isPending}
-                    className="bg-accent text-white text-sm font-semibold px-4 py-1.5 rounded-lg disabled:opacity-60"
+                    className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-1.5 rounded-lg disabled:opacity-60"
                   >
                     Save
                   </button>
@@ -274,7 +274,7 @@ function BrandsTable() {
                   <button
                     onClick={() => updateMutation.mutate(b.id)}
                     disabled={updateMutation.isPending}
-                    className="bg-accent text-white text-sm font-semibold px-4 py-1.5 rounded-lg disabled:opacity-60"
+                    className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-1.5 rounded-lg disabled:opacity-60"
                   >
                     Save
                   </button>
@@ -349,7 +349,7 @@ function ProductsTable() {
                   <button
                     onClick={() => updateMutation.mutate(p.id)}
                     disabled={updateMutation.isPending}
-                    className="bg-accent text-white text-sm font-semibold px-4 py-1.5 rounded-lg disabled:opacity-60"
+                    className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-1.5 rounded-lg disabled:opacity-60"
                   >
                     Save
                   </button>
@@ -488,7 +488,7 @@ function UpfrontListingsTable() {
                     <button
                       onClick={() => updateMutation.mutate(l.id)}
                       disabled={updateMutation.isPending}
-                      className="bg-accent text-white text-sm font-semibold px-4 py-1.5 rounded-lg disabled:opacity-60"
+                      className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-1.5 rounded-lg disabled:opacity-60"
                     >
                       Save
                     </button>
@@ -565,7 +565,7 @@ function OrdersTable() {
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <Money kobo={o.totalKobo} size="text-lg" />
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${ORDER_STATUS_STYLES[o.status] ?? "bg-ground border border-border text-ink-muted"}`}>
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${ORDER_STATUS_STYLES[o.status] ?? "bg-accent/10 text-accent"}`}>
                   {o.status}
                 </span>
                 {o.status !== "PAID" && o.status !== "REFUNDED" && (

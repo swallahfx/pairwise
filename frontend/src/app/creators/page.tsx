@@ -69,14 +69,16 @@ export default function CreatorsDirectoryPage() {
 
   return (
     <div>
-      <div className="px-4 sm:px-8 lg:px-14 pt-12 pb-7 max-w-3xl">
-        <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight mb-3">
-          Find creators who already cover your niche.
-        </h1>
-        <p className="text-ink-muted text-base leading-relaxed">
-          Every rate is listed up front. Filter by niche, compare prices, book directly — or send a
-          custom offer if your budget&apos;s different.
-        </p>
+      <div className="bg-gradient-to-br from-accent/5 to-accent-teal/5">
+        <div className="px-4 sm:px-8 lg:px-14 pt-12 pb-7 max-w-3xl">
+          <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight mb-3">
+            Find creators who already cover your niche.
+          </h1>
+          <p className="text-ink-muted text-base leading-relaxed">
+            Every rate is listed up front. Filter by niche, compare prices, book directly — or send a
+            custom offer if your budget&apos;s different.
+          </p>
+        </div>
       </div>
 
       <div className="px-4 sm:px-8 lg:px-14 pb-5 flex items-center gap-3 flex-wrap">

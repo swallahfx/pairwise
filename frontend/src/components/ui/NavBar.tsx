@@ -93,7 +93,7 @@ export function NavBar() {
             </div>
             {(user.role === "DEVELOPER" || user.role === "ADMIN") && (
               <Link href="/products/new">
-                <button className="bg-accent text-white text-sm font-semibold px-5 py-2.5 rounded-lg">
+                <button className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-5 py-2.5 rounded-lg">
                   List your product
                 </button>
               </Link>
@@ -167,7 +167,7 @@ export function NavBar() {
 
           {!isLoading && user && (user.role === "DEVELOPER" || user.role === "ADMIN") && (
             <Link href="/products/new" onClick={() => setMenuOpen(false)}>
-              <button className="mt-4 w-full bg-accent text-white text-sm font-semibold px-5 py-3 rounded-lg">
+              <button className="mt-4 w-full bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-5 py-3 rounded-lg">
                 List your product
               </button>
             </Link>

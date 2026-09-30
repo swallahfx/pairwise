@@ -81,7 +81,7 @@ export default function OrderStatusPage() {
                 <div className="flex flex-col items-center gap-2">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 flex-shrink-0 ${
-                      done || active ? "bg-accent text-white border-accent" : "bg-surface text-ink-muted border-border"
+                      done || active ? "bg-gradient-to-r from-accent to-accent-teal text-white border-accent" : "bg-surface text-ink-muted border-border"
                     }`}
                   >
                     {done ? "✓" : i + 1}
@@ -144,7 +144,7 @@ export default function OrderStatusPage() {
             <button
               onClick={() => approveMutation.mutate()}
               disabled={approveMutation.isPending || revisionMutation.isPending}
-              className="bg-accent text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
+              className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
             >
               {approveMutation.isPending ? "Releasing…" : "Approve & release payment"}
             </button>
@@ -178,7 +178,7 @@ function ActionRow({
       <button
         onClick={onClick}
         disabled={pending}
-        className="bg-accent text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
+        className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
       >
         {pending ? "Working…" : buttonLabel}
       </button>
@@ -217,7 +217,7 @@ function ReviewForm({ orderId, creatorName }: { orderId: string; creatorName: st
             key={n}
             onClick={() => setRating(n)}
             className={`w-9 h-9 rounded-lg border text-sm font-bold ${
-              n <= rating ? "bg-accent text-white border-accent" : "bg-ground border-border text-ink-muted"
+              n <= rating ? "bg-gradient-to-r from-accent to-accent-teal text-white border-accent" : "bg-ground border-border text-ink-muted"
             }`}
           >
             {n}
@@ -235,7 +235,7 @@ function ReviewForm({ orderId, creatorName }: { orderId: string; creatorName: st
       <button
         type="submit"
         disabled={mutation.isPending}
-        className="bg-accent text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
+        className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
       >
         {mutation.isPending ? "Submitting…" : "Submit review"}
       </button>

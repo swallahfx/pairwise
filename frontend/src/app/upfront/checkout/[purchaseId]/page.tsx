@@ -57,7 +57,7 @@ export default function UpfrontCheckoutPage() {
           <button
             onClick={() => fundMutation.mutate()}
             disabled={fundMutation.isPending}
-            className="w-full bg-accent text-white py-3.5 rounded-lg font-semibold text-[15px] disabled:opacity-60"
+            className="w-full bg-gradient-to-r from-accent to-accent-teal text-white py-3.5 rounded-lg font-semibold text-[15px] disabled:opacity-60"
           >
             {fundMutation.isPending ? "Redirecting to Paystack…" : "Pay with Paystack"}
           </button>

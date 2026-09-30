@@ -5,11 +5,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ground: "#FAF8F4",
+        // Neutrals are cool blue-tinted now, not the old warm cream/beige —
+        // ink in particular is drawn from the wordmark's navy (#102E6B) so
+        // body text itself reads as part of the brand, not a neutral gray.
+        ground: "#F3F8FC",
         surface: "#FFFFFF",
-        ink: "#17160F",
-        "ink-muted": "#6B6858",
-        border: "#E7E2D8",
+        ink: "#0B1F3A",
+        "ink-muted": "#5B6B80",
+        border: "#D9E6F0",
         money: "#0AA7B5",
         accent: "#1476E8",
         "accent-teal": "#17D0C1"

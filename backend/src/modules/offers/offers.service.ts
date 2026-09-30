@@ -1,5 +1,6 @@
 import { ConflictError, ForbiddenError, NotFoundError } from "../../common/errors";
 import { prisma } from "../../config/db";
+import { notificationsService } from "../notifications/notifications.service";
 import { creatorsRepository } from "../creators/creators.repository";
 import { rateCardsRepository } from "../rateCards/rateCards.repository";
 import { requestsRepository } from "../requests/requests.repository";
@@ -7,15 +8,21 @@ import { ordersService } from "../orders/orders.service";
 import { offersRepository } from "./offers.repository";
 import { ApplyToRequestInput, SendCustomOfferInput } from "./offers.schema";
 
+type OfferWithParties = Awaited<ReturnType<typeof offersRepository.findById>>;
+
 // This module is the meeting point of the PRD's three paths to a price
-// (rate card / advert request / custom offer). Whichever path is taken,
-// it ends the same way: an ACCEPTED offer hands off to
-// ordersService.createFromOffer, and one Order object takes it from there.
+// (rate card / advert request / custom offer). All three now converge the
+// same way: an offer starts PENDING, the other side has to accept it
+// (agreeing to what's actually being delivered) before ordersService opens
+// an Order and any money can move.
 export const offersService = {
-  // Path 1 — Rate card: the price is already fixed and listed, so there's
-  // nothing to negotiate. The offer is created ACCEPTED immediately and an
-  // order is opened in the same call.
-  async bookRateCard(developerUserId: string, rateCardItemId: string) {
+  // Path 1 — Rate card: the price is fixed and listed, but what the
+  // developer specifically wants still isn't — that's `requirements`, and
+  // it's what the creator is agreeing to by accepting, and what delivery
+  // gets judged against before the money releases. So this now waits on
+  // creator acceptance exactly like the other two paths, instead of
+  // skipping straight to an order.
+  async bookRateCard(developerUserId: string, rateCardItemId: string, requirements: string) {
     const item = await rateCardsRepository.findById(rateCardItemId);
     if (!item) throw new NotFoundError("Rate card item");
 
@@ -29,11 +36,17 @@ export const offersService = {
       source: "RATE_CARD",
       priceKobo: item.priceKobo,
       deliverable: item.deliverable,
-      status: "ACCEPTED"
+      requirements,
+      status: "PENDING"
     });
 
-    const order = await ordersService.createFromOffer(offer.id, offer.priceKobo);
-    return { offer, order };
+    notificationsService.notify(
+      offer.creator.userId,
+      "OFFER_UPDATE",
+      `${offer.developer.user.name} wants to book "${offer.deliverable}" — review their requirements.`,
+      "/offers"
+    );
+    return offer;
   },
 
   // Path 3 — Custom offer: developer proposes a price to one creator.
@@ -42,7 +55,7 @@ export const offersService = {
     const developer = await prisma.developerProfile.findUnique({ where: { userId: developerUserId } });
     if (!developer) throw new ForbiddenError("Only developer accounts can send an offer");
 
-    return offersRepository.create({
+    const offer = await offersRepository.create({
       developerId: developer.id,
       creatorId: input.creatorId,
       productId: input.productId,
@@ -51,6 +64,14 @@ export const offersService = {
       deliverable: input.deliverable,
       status: "PENDING"
     });
+
+    notificationsService.notify(
+      offer.creator.userId,
+      "OFFER_UPDATE",
+      `${offer.developer.user.name} sent you a custom offer: "${offer.deliverable}".`,
+      "/offers"
+    );
+    return offer;
   },
 
   // Path 2 — Advert request: a creator applies to an open, developer-posted
@@ -63,7 +84,7 @@ export const offersService = {
     const request = await prisma.advertRequest.findUnique({ where: { id: requestId } });
     if (!request || request.status !== "OPEN") throw new NotFoundError("Open request");
 
-    return offersRepository.create({
+    const offer = await offersRepository.create({
       developerId: request.developerId,
       creatorId: creator.id,
       productId: request.productId,
@@ -73,6 +94,14 @@ export const offersService = {
       deliverable: input.deliverable,
       status: "PENDING"
     });
+
+    notificationsService.notify(
+      offer.developer.userId,
+      "OFFER_UPDATE",
+      `${offer.creator.user.name} applied to your request with "${offer.deliverable}".`,
+      "/offers"
+    );
+    return offer;
   },
 
   listApplicants(requestId: string) {
@@ -105,6 +134,8 @@ export const offersService = {
     }
 
     const order = await ordersService.createFromOffer(offer.id, offer.priceKobo);
+    const { userId: recipientId, message } = acceptNotificationFor(offer);
+    notificationsService.notify(recipientId, "OFFER_UPDATE", message, `/orders/${order.id}`);
     return { offer, order };
   },
 
@@ -115,21 +146,44 @@ export const offersService = {
       throw new ConflictError(`Cannot decline an offer in status ${offer.status}`);
     }
     await assertCanRespond(offer, actingUserId);
-    return offersRepository.updateStatus(offerId, "DECLINED");
+    const updated = await offersRepository.updateStatus(offerId, "DECLINED");
+    const { userId: recipientId, message } = declineNotificationFor(offer);
+    notificationsService.notify(recipientId, "OFFER_UPDATE", message, "/offers");
+    return updated;
   }
 };
 
+// The respondent is always whichever side didn't set the price
+// (assertCanRespond enforces that), so the notification always goes the
+// other way — to the side now waiting on an order to fund, or on someone
+// to try again elsewhere.
+function acceptNotificationFor(offer: NonNullable<OfferWithParties>) {
+  return offer.source === "REQUEST"
+    ? { userId: offer.creator.userId, message: `Your application for "${offer.deliverable}" was accepted.` }
+    : {
+        userId: offer.developer.userId,
+        message: `${offer.creator.user.name} accepted your booking for "${offer.deliverable}" — fund it to get started.`
+      };
+}
+
+function declineNotificationFor(offer: NonNullable<OfferWithParties>) {
+  return offer.source === "REQUEST"
+    ? { userId: offer.creator.userId, message: `Your application for "${offer.deliverable}" was declined.` }
+    : { userId: offer.developer.userId, message: `Your offer for "${offer.deliverable}" was declined.` };
+}
+
 // A PENDING offer only has one legitimate respondent: whichever side
-// didn't set the price. A custom offer was priced by the developer, so
-// only the creator it was sent to can accept/decline it; a request
-// application was priced by the creator who applied, so only the
-// developer who posted the request can pick it. Without this check any
-// authenticated user could accept/decline an offer that isn't theirs.
+// didn't set the price. A custom offer or rate-card booking was priced by
+// (or, for a rate card, on behalf of) the developer, so only the creator it
+// was sent to can accept/decline it; a request application was priced by
+// the creator who applied, so only the developer who posted the request
+// can pick it. Without this check any authenticated user could
+// accept/decline an offer that isn't theirs.
 async function assertCanRespond(
   offer: { source: string; creatorId: string; developerId: string },
   actingUserId: string
 ) {
-  if (offer.source === "CUSTOM") {
+  if (offer.source === "CUSTOM" || offer.source === "RATE_CARD") {
     const creator = await creatorsRepository.findByUserId(actingUserId);
     if (!creator || creator.id !== offer.creatorId) {
       throw new ForbiddenError("Only the creator this offer was sent to can respond to it");

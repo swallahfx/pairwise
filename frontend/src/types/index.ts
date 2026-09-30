@@ -104,6 +104,7 @@ export interface Offer {
   status: OfferStatus;
   priceKobo: number;
   deliverable: string;
+  requirements: string | null;
   requestId: string | null;
   createdAt: string;
   creator: { handle: string; user: { name: string } };
@@ -225,6 +226,7 @@ export interface Question {
 
 export type NotificationType =
   | "ORDER_UPDATE"
+  | "OFFER_UPDATE"
   | "UPFRONT_UPDATE"
   | "CREATOR_REVIEW_STATUS"
   | "LISTING_REVIEW_STATUS"

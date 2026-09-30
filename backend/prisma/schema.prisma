@@ -79,6 +79,7 @@ enum QuestionTargetType {
 
 enum NotificationType {
   ORDER_UPDATE
+  OFFER_UPDATE
   UPFRONT_UPDATE
   CREATOR_REVIEW_STATUS
   LISTING_REVIEW_STATUS
@@ -219,6 +220,12 @@ model Offer {
   source         OfferSource
   priceKobo     Int
   deliverable    String
+  // The developer's specific brief for a rate-card booking — what the
+  // creator is agreeing to before any money moves, and what the developer
+  // approving delivery later gets judged against. Custom offers and request
+  // applications already carry an equivalent free-text description in
+  // `deliverable` itself, so this stays null for those.
+  requirements   String?
   status         OfferStatus    @default(PENDING)
   createdAt      DateTime       @default(now())
 

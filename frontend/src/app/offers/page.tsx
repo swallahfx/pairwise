@@ -80,55 +80,63 @@ function CreatorOffersInbox() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["offers-mine"] })
   });
 
-  const pendingCustom = offers?.filter((o) => o.status === "PENDING" && o.source === "CUSTOM") ?? [];
-  const history = offers?.filter((o) => !(o.status === "PENDING" && o.source === "CUSTOM")) ?? [];
+  const pending = offers?.filter((o) => o.status === "PENDING" && (o.source === "CUSTOM" || o.source === "RATE_CARD")) ?? [];
+  const history = offers?.filter((o) => !(o.status === "PENDING" && (o.source === "CUSTOM" || o.source === "RATE_CARD"))) ?? [];
 
   return (
     <div className="px-4 sm:px-8 lg:px-14 py-12 max-w-3xl">
       <h1 className="font-display text-3xl font-semibold mb-2">Offers</h1>
       <p className="text-ink-muted mb-10">
-        Custom offers developers sent you directly. Accepting opens an order — the developer funds it next.
+        Rate-card bookings and custom offers developers sent you directly. Accepting opens an order — the
+        developer funds it next.
       </p>
 
       {isLoading && <p className="text-ink-muted">Loading…</p>}
 
       <h2 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-3">Awaiting your response</h2>
       <div className="space-y-3 mb-10">
-        {pendingCustom.length === 0 && (
+        {pending.length === 0 && (
           <div className="text-sm text-ink-muted border border-border rounded-card p-5 bg-surface">
-            No pending custom offers.
+            Nothing pending.
           </div>
         )}
-        {pendingCustom.map((offer) => (
-          <div
-            key={offer.id}
-            className="bg-surface border border-border rounded-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-          >
-            <div>
-              <div className="font-semibold text-[15px]">{offer.deliverable}</div>
-              <div className="text-[13px] text-ink-muted mt-0.5">From {offer.developer.user.name}</div>
+        {pending.map((offer) => (
+          <div key={offer.id} className="bg-surface border border-border rounded-card p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="font-semibold text-[15px]">{offer.deliverable}</div>
+                <div className="text-[13px] text-ink-muted mt-0.5">
+                  From {offer.developer.user.name} · {offer.source === "RATE_CARD" ? "rate card booking" : "custom offer"}
+                </div>
+              </div>
+              <div className="flex items-center gap-4 flex-wrap">
+                <Money kobo={offer.priceKobo} size="text-xl" />
+                <button
+                  onClick={() => declineMutation.mutate(offer.id)}
+                  disabled={declineMutation.isPending || acceptMutation.isPending}
+                  className="text-sm font-semibold text-red-600 px-3 py-2"
+                >
+                  Decline
+                </button>
+                <button
+                  onClick={() =>
+                    acceptMutation.mutate(offer.id, {
+                      onSuccess: () => router.push("/orders")
+                    })
+                  }
+                  disabled={acceptMutation.isPending || declineMutation.isPending}
+                  className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-60"
+                >
+                  Accept
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-4 flex-wrap">
-              <Money kobo={offer.priceKobo} size="text-xl" />
-              <button
-                onClick={() => declineMutation.mutate(offer.id)}
-                disabled={declineMutation.isPending || acceptMutation.isPending}
-                className="text-sm font-semibold text-red-600 px-3 py-2"
-              >
-                Decline
-              </button>
-              <button
-                onClick={() =>
-                  acceptMutation.mutate(offer.id, {
-                    onSuccess: () => router.push("/orders")
-                  })
-                }
-                disabled={acceptMutation.isPending || declineMutation.isPending}
-                className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-60"
-              >
-                Accept
-              </button>
-            </div>
+            {offer.requirements && (
+              <div className="mt-3 pt-3 border-t border-border text-sm text-ink-muted">
+                <span className="font-semibold text-ink">What they need: </span>
+                {offer.requirements}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -164,7 +172,7 @@ function DeveloperRequestsInbox() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applicants", expanded] })
   });
 
-  const customSent = sentOffers?.filter((o) => o.source === "CUSTOM") ?? [];
+  const customSent = sentOffers?.filter((o) => o.source === "CUSTOM" || o.source === "RATE_CARD") ?? [];
 
   return (
     <div className="px-4 sm:px-8 lg:px-14 py-12 max-w-3xl">
@@ -246,7 +254,16 @@ function DeveloperRequestsInbox() {
         ))}
       </div>
 
-      <h2 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-3">Custom offers you&apos;ve sent</h2>
+      <h2 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-3">
+        Bookings & custom offers you&apos;ve sent
+      </h2>
+      <p className="text-sm text-ink-muted mb-3">
+        A pending one is waiting on the creator to accept — once they do, fund it from{" "}
+        <Link href="/orders" className="text-accent font-semibold">
+          Orders
+        </Link>
+        .
+      </p>
       <OfferHistoryTable offers={customSent} />
     </div>
   );

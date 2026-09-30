@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { QuestionTargetType } from "@/types";
@@ -24,7 +25,8 @@ export function QuestionBox({
   const queryKey = ["questions", targetType, targetId];
   const { data: questions, isLoading } = useQuery({
     queryKey,
-    queryFn: () => api.qa.listForTarget(targetType, targetId)
+    queryFn: () => api.qa.listForTarget(targetType, targetId),
+    enabled: !!user
   });
 
   const [questionText, setQuestionText] = useState("");
@@ -40,8 +42,16 @@ export function QuestionBox({
     <div className="mt-10">
       <h2 className="font-display text-xl font-semibold mb-4">Questions & answers</h2>
 
-      {isLoading && <p className="text-sm text-ink-muted">Loading…</p>}
-      {!isLoading && questions?.length === 0 && (
+      {!user && (
+        <p className="text-sm text-ink-muted mb-4">
+          <Link href="/login" className="text-accent font-semibold">
+            Log in
+          </Link>{" "}
+          to see questions and answers.
+        </p>
+      )}
+      {user && isLoading && <p className="text-sm text-ink-muted">Loading…</p>}
+      {user && !isLoading && questions?.length === 0 && (
         <p className="text-sm text-ink-muted mb-4">No questions yet — be the first to ask.</p>
       )}
 

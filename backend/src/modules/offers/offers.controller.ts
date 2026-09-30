@@ -4,8 +4,8 @@ import { offersService } from "./offers.service";
 
 export const offersController = {
   async bookRateCard(req: Request, res: Response) {
-    const result = await offersService.bookRateCard(req.auth!.userId, req.body.rateCardItemId);
-    res.status(201).json(result);
+    const offer = await offersService.bookRateCard(req.auth!.userId, req.body.rateCardItemId, req.body.requirements);
+    res.status(201).json(offer);
   },
   async sendCustomOffer(req: Request, res: Response) {
     const offer = await offersService.sendCustomOffer(req.auth!.userId, req.body);

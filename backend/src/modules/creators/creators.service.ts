@@ -6,13 +6,13 @@ import { reviewsRepository } from "../reviews/reviews.repository";
 import { creatorsRepository } from "./creators.repository";
 import { AdminUpdateCreatorInput, UpdateCreatorProfileInput } from "./creators.schema";
 
-// Rates stay visible to everyone except another creator browsing someone
-// else's card (the point is stopping casual competitor price-watching, not
-// locking pricing behind a developer login) — a creator viewing their own
-// profile through this public route is still themself, not "another
-// creator", so that case is explicitly exempted.
+// Rates are visible only to a logged-in developer (or admin) — not other
+// creators, not brands, and not logged-out visitors — with one exception:
+// a creator viewing their own profile through this public route is still
+// themself, not "another creator", so that case stays visible.
 function ratesHiddenFrom(viewer: AuthPayload | undefined, profileUserId: string): boolean {
-  return viewer?.role === "CREATOR" && viewer.userId !== profileUserId;
+  if (viewer?.userId === profileUserId) return false;
+  return viewer?.role !== "DEVELOPER" && viewer?.role !== "ADMIN";
 }
 
 // Below this many questions ever asked, a reply rate/response time is more

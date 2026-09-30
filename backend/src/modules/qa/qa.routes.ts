@@ -7,6 +7,6 @@ import { answerQuestionSchema, askQuestionSchema } from "./qa.schema";
 
 export const qaRouter = Router();
 
-qaRouter.get("/", asyncHandler(qaController.listForTarget));
+qaRouter.get("/", requireAuth, asyncHandler(qaController.listForTarget));
 qaRouter.post("/", requireAuth, validate(askQuestionSchema), asyncHandler(qaController.ask));
 qaRouter.post("/:id/answer", requireAuth, validate(answerQuestionSchema), asyncHandler(qaController.answer));

@@ -14,4 +14,4 @@ reviewsRouter.post(
   validate(createReviewSchema),
   asyncHandler(reviewsController.create)
 );
-reviewsRouter.get("/creators/:creatorId", asyncHandler(reviewsController.listForCreator));
+reviewsRouter.get("/creators/:creatorId", requireAuth, asyncHandler(reviewsController.listForCreator));

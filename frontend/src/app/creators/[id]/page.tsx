@@ -21,15 +21,19 @@ export default function CreatorProfilePage() {
   });
   const { data: reviewData } = useQuery({
     queryKey: ["creator-reviews", params.id],
-    queryFn: () => api.reviews.listForCreator(params.id)
+    queryFn: () => api.reviews.listForCreator(params.id),
+    enabled: !!user
   });
 
   const [showCustomOffer, setShowCustomOffer] = useState(false);
   const [customOffer, setCustomOffer] = useState({ deliverable: "", priceKobo: 5000000 });
+  const [bookingItemId, setBookingItemId] = useState<string | null>(null);
+  const [requirements, setRequirements] = useState("");
 
   const bookMutation = useMutation({
-    mutationFn: (rateCardItemId: string) => api.offers.bookRateCard(rateCardItemId),
-    onSuccess: ({ order }) => router.push(`/checkout/${order.id}`)
+    mutationFn: ({ rateCardItemId, requirements }: { rateCardItemId: string; requirements: string }) =>
+      api.offers.bookRateCard(rateCardItemId, requirements),
+    onSuccess: () => router.push("/offers")
   });
 
   const customOfferMutation = useMutation({
@@ -111,30 +115,71 @@ export default function CreatorProfilePage() {
               {creator.rateCardItems.map((item, i) => (
                 <div
                   key={item.id}
-                  className={`flex items-center px-6 py-5 ${i < creator.rateCardItems.length - 1 ? "border-b border-border" : ""}`}
+                  className={i < creator.rateCardItems.length - 1 ? "border-b border-border" : ""}
                 >
-                  <div className="flex-grow">
-                    <div className="text-[15px] font-semibold">{item.deliverable}</div>
-                    <div className="text-[13px] text-ink-muted mt-0.5">{item.turnaroundDays}-day turnaround</div>
+                  <div className="flex items-center px-6 py-5">
+                    <div className="flex-grow">
+                      <div className="text-[15px] font-semibold">{item.deliverable}</div>
+                      <div className="text-[13px] text-ink-muted mt-0.5">{item.turnaroundDays}-day turnaround</div>
+                    </div>
+                    <div className="w-32 text-right">
+                      <Money kobo={item.priceKobo} size="text-2xl" />
+                    </div>
+                    <button
+                      onClick={() =>
+                        hasRole(user, "DEVELOPER")
+                          ? setBookingItemId(bookingItemId === item.id ? null : item.id)
+                          : router.push("/login")
+                      }
+                      className="ml-6 bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
+                    >
+                      {hasRole(user, "DEVELOPER")
+                        ? bookingItemId === item.id
+                          ? "Cancel"
+                          : "Book"
+                        : "Log in to book"}
+                    </button>
                   </div>
-                  <div className="w-32 text-right">
-                    <Money kobo={item.priceKobo} size="text-2xl" />
-                  </div>
-                  <button
-                    onClick={() =>
-                      hasRole(user, "DEVELOPER") ? bookMutation.mutate(item.id) : router.push("/login")
-                    }
-                    disabled={bookMutation.isPending}
-                    className="ml-6 bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
-                  >
-                    {bookMutation.isPending ? "Booking…" : hasRole(user, "DEVELOPER") ? "Book" : "Log in to book"}
-                  </button>
+                  {bookingItemId === item.id && (
+                    <form
+                      className="px-6 pb-5 space-y-3"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        bookMutation.mutate(
+                          { rateCardItemId: item.id, requirements },
+                          { onSuccess: () => setRequirements("") }
+                        );
+                      }}
+                    >
+                      <div>
+                        <label className="block text-[13px] font-semibold mb-2">
+                          What exactly do you need? The creator has to agree to this before you pay, and
+                          it&apos;s what delivery gets judged against.
+                        </label>
+                        <textarea
+                          className="input"
+                          rows={3}
+                          value={requirements}
+                          onChange={(e) => setRequirements(e.target.value)}
+                          placeholder="e.g. Cover our new analytics dashboard feature, mention the free trial, keep it under 60 seconds."
+                          required
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={bookMutation.isPending}
+                        className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
+                      >
+                        {bookMutation.isPending ? "Sending…" : "Send booking request"}
+                      </button>
+                      {bookMutation.isError && (
+                        <p className="text-sm text-red-600">{(bookMutation.error as Error).message}</p>
+                      )}
+                    </form>
+                  )}
                 </div>
               ))}
             </div>
-            {bookMutation.isError && (
-              <p className="text-sm text-red-600 mt-2">{(bookMutation.error as Error).message}</p>
-            )}
           </>
         )}
 
@@ -207,8 +252,19 @@ export default function CreatorProfilePage() {
 
         <div className="mt-10">
           <h2 className="font-display text-xl font-semibold mb-4">Reviews</h2>
-          {(!reviewData || reviewData.reviews.length === 0) && (
-            <p className="text-sm text-ink-muted">No reviews yet — this creator hasn&apos;t completed a booking.</p>
+          {!user ? (
+            <p className="text-sm text-ink-muted">
+              <Link href="/login" className="text-accent font-semibold">
+                Log in
+              </Link>{" "}
+              to see reviews.
+            </p>
+          ) : (
+            <>
+              {(!reviewData || reviewData.reviews.length === 0) && (
+                <p className="text-sm text-ink-muted">No reviews yet — this creator hasn&apos;t completed a booking.</p>
+              )}
+            </>
           )}
           <div className="space-y-3">
             {reviewData?.reviews.map((r) => (

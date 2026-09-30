@@ -17,7 +17,7 @@ const PAGE_SIZE = 5;
 
 export default function CreatorsDirectoryPage() {
   const { user } = useAuth();
-  const isCreatorViewer = user?.role === "CREATOR";
+  const canSeeRates = user?.role === "DEVELOPER" || user?.role === "ADMIN";
   const [selected, setSelected] = useState<string[]>([]);
   const [sort, setSort] = useState<"top" | "price_asc" | "price_desc">("top");
   const [platform, setPlatform] = useState("all");
@@ -126,7 +126,7 @@ export default function CreatorsDirectoryPage() {
             onChange={(e) => setSort(e.target.value as "top" | "price_asc" | "price_desc")}
           >
             <option value="top">Top rated</option>
-            {!isCreatorViewer && (
+            {canSeeRates && (
               <>
                 <option value="price_asc">Price: low to high</option>
                 <option value="price_desc">Price: high to low</option>

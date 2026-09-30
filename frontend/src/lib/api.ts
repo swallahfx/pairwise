@@ -119,10 +119,10 @@ export const api = {
     adminDelete: (id: string) => request<void>(`/requests/admin/${id}`, { method: "DELETE" })
   },
   offers: {
-    bookRateCard: (rateCardItemId: string) =>
-      request<{ offer: unknown; order: import("@/types").Order }>("/offers/book-rate-card", {
+    bookRateCard: (rateCardItemId: string, requirements: string) =>
+      request<import("@/types").Offer>("/offers/book-rate-card", {
         method: "POST",
-        body: JSON.stringify({ rateCardItemId })
+        body: JSON.stringify({ rateCardItemId, requirements })
       }),
     sendCustom: (data: { creatorId: string; productId?: string; priceKobo: number; deliverable: string }) =>
       request<import("@/types").Offer>("/offers/custom", { method: "POST", body: JSON.stringify(data) }),

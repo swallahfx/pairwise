@@ -12,7 +12,7 @@ offersRouter.post(
   "/book-rate-card",
   requireAuth,
   requireRole("DEVELOPER"),
-  validate(z.object({ rateCardItemId: z.string().uuid() })),
+  validate(z.object({ rateCardItemId: z.string().uuid(), requirements: z.string().min(1) })),
   asyncHandler(offersController.bookRateCard)
 );
 

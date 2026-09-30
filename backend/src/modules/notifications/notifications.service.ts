@@ -2,6 +2,7 @@ import { notificationsRepository } from "./notifications.repository";
 
 type NotificationType =
   | "ORDER_UPDATE"
+  | "OFFER_UPDATE"
   | "UPFRONT_UPDATE"
   | "CREATOR_REVIEW_STATUS"
   | "LISTING_REVIEW_STATUS"

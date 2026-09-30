@@ -4,12 +4,12 @@ import { creatorsService } from "./creators.service";
 export const creatorsController = {
   async listDirectory(req: Request, res: Response) {
     const { niche, sort } = req.query as { niche?: string; sort?: "price_asc" | "price_desc" };
-    const creators = await creatorsService.listDirectory(niche, sort);
+    const creators = await creatorsService.listDirectory(niche, sort, req.auth);
     res.json(creators);
   },
 
   async getProfile(req: Request, res: Response) {
-    const creator = await creatorsService.getPublicProfile(req.params.id);
+    const creator = await creatorsService.getPublicProfile(req.params.id, req.auth);
     res.json(creator);
   },
 

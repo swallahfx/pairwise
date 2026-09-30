@@ -27,6 +27,7 @@ export interface CreatorProfile {
   reviewCount?: number;
   replyRate?: number | null;
   avgReplyHours?: number | null;
+  ratesHidden?: boolean;
 }
 
 export interface Review {

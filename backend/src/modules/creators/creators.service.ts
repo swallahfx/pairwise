@@ -1,9 +1,19 @@
 import { ConflictError, NotFoundError } from "../../common/errors";
+import { AuthPayload } from "../../middleware/auth";
 import { notificationsService } from "../notifications/notifications.service";
 import { qaRepository } from "../qa/qa.repository";
 import { reviewsRepository } from "../reviews/reviews.repository";
 import { creatorsRepository } from "./creators.repository";
 import { AdminUpdateCreatorInput, UpdateCreatorProfileInput } from "./creators.schema";
+
+// Rates stay visible to everyone except another creator browsing someone
+// else's card (the point is stopping casual competitor price-watching, not
+// locking pricing behind a developer login) — a creator viewing their own
+// profile through this public route is still themself, not "another
+// creator", so that case is explicitly exempted.
+function ratesHiddenFrom(viewer: AuthPayload | undefined, profileUserId: string): boolean {
+  return viewer?.role === "CREATOR" && viewer.userId !== profileUserId;
+}
 
 // Below this many questions ever asked, a reply rate/response time is more
 // noise than signal (one lucky or unlucky data point looks like a trend) —
@@ -89,16 +99,23 @@ export const creatorsService = {
     return updated;
   },
 
-  async getPublicProfile(id: string) {
+  async getPublicProfile(id: string, viewer?: AuthPayload) {
     const profile = await creatorsRepository.findById(id);
     if (!profile || profile.gateStatus !== "APPROVED") {
       throw new NotFoundError("Creator");
     }
     const [stats, reply] = await Promise.all([reviewsRepository.statsByCreator(id), replyStats(id)]);
-    return { ...profile, ...stats, ...reply };
+    const ratesHidden = ratesHiddenFrom(viewer, profile.userId);
+    return {
+      ...profile,
+      ...stats,
+      ...reply,
+      rateCardItems: ratesHidden ? [] : profile.rateCardItems,
+      ratesHidden
+    };
   },
 
-  async listDirectory(niche?: string, sort?: "price_asc" | "price_desc") {
+  async listDirectory(niche?: string, sort?: "price_asc" | "price_desc", viewer?: AuthPayload) {
     const creators = await creatorsRepository.findApproved(niche);
     const statsByCreator = await reviewsRepository.statsForCreators(creators.map((c: { id: string }) => c.id));
 
@@ -121,7 +138,16 @@ export const creatorsService = {
       withMinPrice.sort((a: { minPriceKobo: number }, b: { minPriceKobo: number }) => b.minPriceKobo - a.minPriceKobo);
     }
 
-    return withMinPrice;
+    // Sort order above still reflects real pricing (so "top rated" browsing
+    // isn't distorted), but the actual numbers — including the internal
+    // minPriceKobo sort key — never reach the response for a creator
+    // looking at another creator's card.
+    return withMinPrice.map((c) => {
+      const ratesHidden = ratesHiddenFrom(viewer, c.userId);
+      if (!ratesHidden) return { ...c, ratesHidden };
+      const { minPriceKobo: _minPriceKobo, ...rest } = c;
+      return { ...rest, rateCardItems: [], ratesHidden };
+    });
   },
 
   async adminUpdate(id: string, input: AdminUpdateCreatorInput) {

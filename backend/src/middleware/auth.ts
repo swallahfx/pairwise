@@ -32,6 +32,22 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction) {
   }
 }
 
+// For public routes that behave differently for a logged-in viewer (e.g.
+// hiding rate cards from other creators) without requiring login at all —
+// unlike requireAuth, a missing or invalid token just leaves req.auth
+// unset rather than rejecting the request.
+export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  if (header?.startsWith("Bearer ")) {
+    try {
+      req.auth = jwt.verify(header.slice("Bearer ".length), env.jwtSecret) as AuthPayload;
+    } catch {
+      // Invalid/expired token on an optional-auth route — treat as anonymous.
+    }
+  }
+  next();
+}
+
 // ADMIN always passes every role gate below — admin accounts are
 // provisioned with a real DeveloperProfile/CreatorProfile/BrandProfile
 // (see auth.service.ts's adminCreateUser and prisma/seed.ts), so the

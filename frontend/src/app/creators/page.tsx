@@ -9,12 +9,15 @@ import { Money } from "@/components/ui/Money";
 import { Rating } from "@/components/ui/Rating";
 import { SaveButton } from "@/components/ui/SaveButton";
 import { Pagination } from "@/components/ui/Pagination";
+import { useAuth } from "@/lib/auth";
 
 const NICHES = ["AI Tools", "Dev Tools", "SaaS", "Indie Apps", "Productivity", "Fintech"];
 const TOP_COUNT = 5;
 const PAGE_SIZE = 5;
 
 export default function CreatorsDirectoryPage() {
+  const { user } = useAuth();
+  const isCreatorViewer = user?.role === "CREATOR";
   const [selected, setSelected] = useState<string[]>([]);
   const [sort, setSort] = useState<"top" | "price_asc" | "price_desc">("top");
   const [platform, setPlatform] = useState("all");
@@ -123,8 +126,12 @@ export default function CreatorsDirectoryPage() {
             onChange={(e) => setSort(e.target.value as "top" | "price_asc" | "price_desc")}
           >
             <option value="top">Top rated</option>
-            <option value="price_asc">Price: low to high</option>
-            <option value="price_desc">Price: high to low</option>
+            {!isCreatorViewer && (
+              <>
+                <option value="price_asc">Price: low to high</option>
+                <option value="price_desc">Price: high to low</option>
+              </>
+            )}
           </select>
         </div>
       </div>
@@ -180,11 +187,17 @@ export default function CreatorsDirectoryPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-4 flex-shrink-0 sm:justify-end">
-                      {cheapest && (
-                        <div className="text-right">
-                          <Money kobo={cheapest.priceKobo} size="text-xl" />
-                          <div className="text-xs text-ink-muted mt-0.5">{cheapest.deliverable}</div>
+                      {c.ratesHidden ? (
+                        <div className="text-xs text-ink-muted text-right max-w-[110px]">
+                          Rates visible to developers
                         </div>
+                      ) : (
+                        cheapest && (
+                          <div className="text-right">
+                            <Money kobo={cheapest.priceKobo} size="text-xl" />
+                            <div className="text-xs text-ink-muted mt-0.5">{cheapest.deliverable}</div>
+                          </div>
+                        )
                       )}
                       <SaveButton creatorId={c.id} size="text-xl" />
                     </div>

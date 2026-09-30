@@ -1,13 +1,13 @@
 import { Router } from "express";
 import { asyncHandler } from "../../common/asyncHandler";
-import { requireAuth, requireRole } from "../../middleware/auth";
+import { optionalAuth, requireAuth, requireRole } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
 import { creatorsController } from "./creators.controller";
 import { adminUpdateCreatorSchema, updateCreatorProfileSchema } from "./creators.schema";
 
 export const creatorsRouter = Router();
 
-creatorsRouter.get("/", asyncHandler(creatorsController.listDirectory));
+creatorsRouter.get("/", optionalAuth, asyncHandler(creatorsController.listDirectory));
 creatorsRouter.get("/me", requireAuth, requireRole("CREATOR"), asyncHandler(creatorsController.getMyProfile));
 creatorsRouter.put(
   "/me",
@@ -19,7 +19,7 @@ creatorsRouter.put(
 creatorsRouter.get("/saved/mine", requireAuth, asyncHandler(creatorsController.listSaved));
 creatorsRouter.post("/:id/save", requireAuth, asyncHandler(creatorsController.save));
 creatorsRouter.delete("/:id/save", requireAuth, asyncHandler(creatorsController.unsave));
-creatorsRouter.get("/:id", asyncHandler(creatorsController.getProfile));
+creatorsRouter.get("/:id", optionalAuth, asyncHandler(creatorsController.getProfile));
 
 creatorsRouter.get(
   "/admin/pending",

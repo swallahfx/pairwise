@@ -101,33 +101,41 @@ export default function CreatorProfilePage() {
           Budget different? Send a custom offer instead of booking one of these.
         </p>
 
-        <div className="border border-border rounded-card bg-surface overflow-hidden">
-          {creator.rateCardItems.map((item, i) => (
-            <div
-              key={item.id}
-              className={`flex items-center px-6 py-5 ${i < creator.rateCardItems.length - 1 ? "border-b border-border" : ""}`}
-            >
-              <div className="flex-grow">
-                <div className="text-[15px] font-semibold">{item.deliverable}</div>
-                <div className="text-[13px] text-ink-muted mt-0.5">{item.turnaroundDays}-day turnaround</div>
-              </div>
-              <div className="w-32 text-right">
-                <Money kobo={item.priceKobo} size="text-2xl" />
-              </div>
-              <button
-                onClick={() =>
-                  hasRole(user, "DEVELOPER") ? bookMutation.mutate(item.id) : router.push("/login")
-                }
-                disabled={bookMutation.isPending}
-                className="ml-6 bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
-              >
-                {bookMutation.isPending ? "Booking…" : hasRole(user, "DEVELOPER") ? "Book" : "Log in to book"}
-              </button>
+        {creator.ratesHidden ? (
+          <div className="border border-border rounded-card bg-surface p-6 text-sm text-ink-muted">
+            Rates are visible to developer accounts.
+          </div>
+        ) : (
+          <>
+            <div className="border border-border rounded-card bg-surface overflow-hidden">
+              {creator.rateCardItems.map((item, i) => (
+                <div
+                  key={item.id}
+                  className={`flex items-center px-6 py-5 ${i < creator.rateCardItems.length - 1 ? "border-b border-border" : ""}`}
+                >
+                  <div className="flex-grow">
+                    <div className="text-[15px] font-semibold">{item.deliverable}</div>
+                    <div className="text-[13px] text-ink-muted mt-0.5">{item.turnaroundDays}-day turnaround</div>
+                  </div>
+                  <div className="w-32 text-right">
+                    <Money kobo={item.priceKobo} size="text-2xl" />
+                  </div>
+                  <button
+                    onClick={() =>
+                      hasRole(user, "DEVELOPER") ? bookMutation.mutate(item.id) : router.push("/login")
+                    }
+                    disabled={bookMutation.isPending}
+                    className="ml-6 bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
+                  >
+                    {bookMutation.isPending ? "Booking…" : hasRole(user, "DEVELOPER") ? "Book" : "Log in to book"}
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        {bookMutation.isError && (
-          <p className="text-sm text-red-600 mt-2">{(bookMutation.error as Error).message}</p>
+            {bookMutation.isError && (
+              <p className="text-sm text-red-600 mt-2">{(bookMutation.error as Error).message}</p>
+            )}
+          </>
         )}
 
         <div className="mt-4 border border-border rounded-card bg-surface p-5">

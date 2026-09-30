@@ -8,16 +8,19 @@ import { Pill } from "@/components/ui/Pill";
 import { Money } from "@/components/ui/Money";
 import { Rating } from "@/components/ui/Rating";
 import { SaveButton } from "@/components/ui/SaveButton";
+import { Pagination } from "@/components/ui/Pagination";
 
 const NICHES = ["AI Tools", "Dev Tools", "SaaS", "Indie Apps", "Productivity", "Fintech"];
-const PAGE_SIZE = 9;
+const TOP_COUNT = 5;
+const PAGE_SIZE = 5;
 
 export default function CreatorsDirectoryPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [sort, setSort] = useState<"top" | "price_asc" | "price_desc">("top");
   const [platform, setPlatform] = useState("all");
   const [search, setSearch] = useState("");
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [expanded, setExpanded] = useState(false);
+  const [page, setPage] = useState(1);
 
   const { data: creators, isLoading } = useQuery({
     queryKey: ["creators", sort],
@@ -28,6 +31,8 @@ export default function CreatorsDirectoryPage() {
     () => Array.from(new Set(creators?.map((c) => c.platform) ?? [])).sort(),
     [creators]
   );
+
+  const isFiltering = selected.length > 0 || platform !== "all" || search.trim() !== "";
 
   const filtered = useMemo(() => {
     if (!creators) return [];
@@ -57,11 +62,20 @@ export default function CreatorsDirectoryPage() {
     });
   }, [creators, selected, platform, search, sort]);
 
+  // Any active search/filter jumps straight to the full paginated list —
+  // the top-5 teaser only makes sense for the unfiltered "browse" state,
+  // since searching for something that isn't in the top 5 would otherwise
+  // just look like an empty result.
+  const showAll = expanded || isFiltering;
+
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
+    setPage(1);
   }, [selected, platform, search, sort]);
 
-  const visible = filtered.slice(0, visibleCount);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const topFive = filtered.slice(0, TOP_COUNT);
+  const visible = showAll ? paged : topFive;
 
   function toggleNiche(name: string) {
     setSelected((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
@@ -123,61 +137,81 @@ export default function CreatorsDirectoryPage() {
         ))}
       </div>
 
-      <div className="px-4 sm:px-8 lg:px-14 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="px-4 sm:px-8 lg:px-14 py-10">
+        {!showAll && (
+          <h2 className="text-sm font-semibold text-ink-muted uppercase tracking-wide mb-4">
+            Top rated creators
+          </h2>
+        )}
+
         {isLoading && <p className="text-ink-muted">Loading creators…</p>}
-        {visible.map((c) => {
-          const cheapest = c.rateCardItems[0];
-          return (
-            <Link key={c.id} href={`/creators/${c.id}`} className="block">
-              <div className="bg-surface border border-border rounded-card p-6 flex flex-col gap-4 h-full">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-ground border border-border flex items-center justify-center font-display font-semibold text-sm">
-                    {c.user.name.split(" ").map((p) => p[0]).join("")}
-                  </div>
-                  <div className="flex-grow">
-                    <div className="font-semibold text-[15px]">{c.user.name}</div>
-                    <div className="text-[13px] text-ink-muted">{c.handle}</div>
-                  </div>
-                  <SaveButton creatorId={c.id} size="text-xl" />
-                </div>
-                <Rating avgRating={c.avgRating} reviewCount={c.reviewCount} size="text-[13px]" />
-                <div className="flex gap-2 flex-wrap">
-                  {c.nicheTags.map((t) => (
-                    <span key={t} className="text-xs px-2.5 py-1 rounded-full bg-ground border border-border text-ink-muted">
-                      {t}
-                    </span>
-                  ))}
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-ground border border-border text-ink-muted">
-                    {(c.followerCount / 1000).toFixed(0)}K · {c.platform}
-                  </span>
-                </div>
-                {cheapest && (
-                  <div className="mt-auto pt-4 border-t border-border flex items-baseline justify-between">
-                    <div>
-                      <Money kobo={cheapest.priceKobo} size="text-3xl" />
-                      <div className="text-xs text-ink-muted mt-1">{cheapest.deliverable}</div>
-                    </div>
-                    <span className="text-sm font-semibold text-accent">View rate card →</span>
-                  </div>
-                )}
-              </div>
-            </Link>
-          );
-        })}
+
         {!isLoading && filtered.length === 0 && (
-          <div className="col-span-full py-16 text-center text-ink-muted">No creators match those niches yet.</div>
+          <div className="py-16 text-center text-ink-muted">No creators match those niches yet.</div>
+        )}
+
+        {visible.length > 0 && (
+          <div className="border border-border rounded-card bg-surface overflow-hidden">
+            {visible.map((c, i) => {
+              const cheapest = c.rateCardItems[0];
+              return (
+                <Link key={c.id} href={`/creators/${c.id}`} className="block hover:bg-ground/50">
+                  <div
+                    className={`flex flex-col sm:flex-row sm:items-center gap-4 px-5 sm:px-6 py-5 ${
+                      i < visible.length - 1 ? "border-b border-border" : ""
+                    }`}
+                  >
+                    <div className="w-11 h-11 flex-shrink-0 rounded-full bg-ground border border-border flex items-center justify-center font-display font-semibold text-sm">
+                      {c.user.name.split(" ").map((p) => p[0]).join("")}
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-[15px]">{c.user.name}</span>
+                        <span className="text-[13px] text-ink-muted">{c.handle}</span>
+                      </div>
+                      <div className="mt-1 flex items-center gap-2 flex-wrap">
+                        <Rating avgRating={c.avgRating} reviewCount={c.reviewCount} size="text-[13px]" />
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-ground border border-border text-ink-muted">
+                          {c.nicheTags[0]}
+                        </span>
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-ground border border-border text-ink-muted">
+                          {(c.followerCount / 1000).toFixed(0)}K · {c.platform}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 flex-shrink-0 sm:justify-end">
+                      {cheapest && (
+                        <div className="text-right">
+                          <Money kobo={cheapest.priceKobo} size="text-xl" />
+                          <div className="text-xs text-ink-muted mt-0.5">{cheapest.deliverable}</div>
+                        </div>
+                      )}
+                      <SaveButton creatorId={c.id} size="text-xl" />
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
+        {!showAll && filtered.length > TOP_COUNT && (
+          <div className="flex justify-center mt-6">
+            <button
+              onClick={() => setExpanded(true)}
+              className="border border-accent text-accent rounded-lg px-6 py-2.5 text-sm font-semibold hover:bg-accent/5"
+            >
+              See all {filtered.length} creators →
+            </button>
+          </div>
+        )}
+
+        {showAll && totalPages > 1 && (
+          <div className="mt-6">
+            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+          </div>
         )}
       </div>
-      {filtered.length > visibleCount && (
-        <div className="px-4 sm:px-8 lg:px-14 pb-16 flex justify-center">
-          <button
-            onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
-            className="border border-border rounded-lg px-6 py-2.5 text-sm font-semibold hover:bg-surface"
-          >
-            Load more creators
-          </button>
-        </div>
-      )}
     </div>
   );
 }

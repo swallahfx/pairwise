@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { Pagination } from "@/components/ui/Pagination";
 
 const NICHES = ["AI Tools", "Dev Tools", "SaaS", "Indie Apps", "Productivity", "Fintech"];
 const MONETIZATION_LABELS: Record<string, string> = {
@@ -11,12 +12,18 @@ const MONETIZATION_LABELS: Record<string, string> = {
   EARLY_REVENUE: "Early revenue",
   ESTABLISHED: "Established"
 };
+const TOP_COUNT = 5;
+const PAGE_SIZE = 5;
 
 export default function ProductsPage() {
   const { data: products, isLoading } = useQuery({ queryKey: ["products"], queryFn: api.products.list });
   const [niche, setNiche] = useState("all");
   const [monetizationStatus, setMonetizationStatus] = useState("all");
   const [search, setSearch] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const [page, setPage] = useState(1);
+
+  const isFiltering = niche !== "all" || monetizationStatus !== "all" || search.trim() !== "";
 
   const filtered = useMemo(() => {
     if (!products) return [];
@@ -30,6 +37,16 @@ export default function ProductsPage() {
       return true;
     });
   }, [products, niche, monetizationStatus, search]);
+
+  const showAll = expanded || isFiltering;
+
+  useEffect(() => {
+    setPage(1);
+  }, [niche, monetizationStatus, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const visible = showAll ? paged : filtered.slice(0, TOP_COUNT);
 
   return (
     <div>
@@ -76,32 +93,60 @@ export default function ProductsPage() {
       </div>
 
       <div className="px-4 sm:px-8 lg:px-14 pb-12">
-      {isLoading && <p className="text-ink-muted">Loading…</p>}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map((p) => (
-          <Link key={p.id} href={`/products/${p.id}`} className="block">
-            <div className="bg-surface border border-border rounded-card p-6 flex flex-col gap-4 h-full">
-              <div>
-                <div className="font-semibold text-[16px]">{p.name}</div>
-                <div className="text-[13px] text-ink-muted mt-1">{p.pitch}</div>
-              </div>
-              <span className="text-xs px-2.5 py-1 rounded-full bg-ground border border-border text-ink-muted w-fit">
-                {p.niche}
-              </span>
-              <div className="mt-auto pt-4 border-t border-border">
-                <div className="font-display text-2xl font-bold">
-                  {p.mrrKobo ? `₦${(p.mrrKobo / 100).toLocaleString("en-NG")}` : "Pre-revenue"}
-                </div>
-                <div className="text-xs text-ink-muted mt-1">{p.mrrKobo ? "MRR" : "Just launched"}</div>
-              </div>
-            </div>
-          </Link>
-        ))}
-        {!isLoading && filtered.length === 0 && (
-          <div className="col-span-3 py-16 text-center text-ink-muted">No products match those filters.</div>
+        {!showAll && (
+          <h2 className="text-sm font-semibold text-ink-muted uppercase tracking-wide mb-4">Recent products</h2>
         )}
-      </div>
+
+        {isLoading && <p className="text-ink-muted">Loading…</p>}
+
+        {!isLoading && filtered.length === 0 && (
+          <div className="py-16 text-center text-ink-muted">No products match those filters.</div>
+        )}
+
+        {visible.length > 0 && (
+          <div className="border border-border rounded-card bg-surface overflow-hidden">
+            {visible.map((p, i) => (
+              <Link key={p.id} href={`/products/${p.id}`} className="block hover:bg-ground/50">
+                <div
+                  className={`flex flex-col sm:flex-row sm:items-center gap-4 px-5 sm:px-6 py-5 ${
+                    i < visible.length - 1 ? "border-b border-border" : ""
+                  }`}
+                >
+                  <div className="flex-grow min-w-0">
+                    <div className="font-semibold text-[16px]">{p.name}</div>
+                    <div className="text-[13px] text-ink-muted mt-1">{p.pitch}</div>
+                    <span className="inline-block mt-2 text-xs px-2.5 py-1 rounded-full bg-ground border border-border text-ink-muted">
+                      {p.niche}
+                    </span>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="font-display text-xl font-bold">
+                      {p.mrrKobo ? `₦${(p.mrrKobo / 100).toLocaleString("en-NG")}` : "Pre-revenue"}
+                    </div>
+                    <div className="text-xs text-ink-muted mt-0.5">{p.mrrKobo ? "MRR" : "Just launched"}</div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {!showAll && filtered.length > TOP_COUNT && (
+          <div className="flex justify-center mt-6">
+            <button
+              onClick={() => setExpanded(true)}
+              className="border border-accent text-accent rounded-lg px-6 py-2.5 text-sm font-semibold hover:bg-accent/5"
+            >
+              See all {filtered.length} products →
+            </button>
+          </div>
+        )}
+
+        {showAll && totalPages > 1 && (
+          <div className="mt-6">
+            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+          </div>
+        )}
       </div>
     </div>
   );

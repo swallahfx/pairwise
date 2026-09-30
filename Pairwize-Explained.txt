@@ -1,0 +1,263 @@
+PAIRWIZE, EXPLAINED
+====================
+
+WHAT IT IS
+----------
+Pairwize connects developers and brands with content creators in Nigeria —
+priced in Naira, paid through Paystack, with money held safely (escrow)
+until the work is actually done.
+
+There are two shapes of deal on the platform:
+
+1. BESPOKE WORK — a developer commissions a specific deliverable (one
+   video, one thread) from one creator.
+2. UPFRONT — a creator or brand lists a future program (a newsletter
+   issue, a video series) and sells slots in it before it even runs.
+
+Both follow the same basic money flow:
+
+   Agreed -> Funded (held in escrow) -> Delivered / Program runs
+   -> Approved -> Paid out
+
+Nothing pays out until the buyer approves, or a set number of days pass
+with no response — so nobody is stuck waiting forever, and nobody's money
+moves before the work is real. And if something genuinely goes wrong
+partway through, either side can raise it themselves rather than the
+platform just hoping nobody notices (see DISPUTES, further down).
+
+
+STAYING IN THE LOOP
+--------------------
+Every account gets a notification bell (top nav) — in-app only, no email
+— that fires on the things that actually need a reaction: someone booked
+you, accepted your offer, funded an order, submitted work, asked a
+question, left a review, raised or responded to a dispute. Click a
+notification and it takes you straight to the relevant order, offer, or
+listing instead of just marking something read.
+
+On top of that, three nav links carry a small "N new" badge — Requests
+and Upfront for creators, Creators for developers (brands get the
+Upfront badge too, since they browse it as buyers) — counting whatever's
+appeared there since you last opened that page. Open the page and the
+badge clears; it's a lighter signal than a notification for "something
+changed here," not an action you need to respond to.
+
+
+FOR CONTENT CREATORS
+---------------------
+List your rate once. Get discovered, booked, and paid — without chasing
+invoices or negotiating in DMs.
+
+1. GETTING LISTED
+   Sign up and fill in your handle, platform, follower count, engagement
+   rate, and niches. If you clear a minimum bar (1,000+ followers, 2%+
+   engagement), your profile goes to a human admin for review — clearing
+   the bar doesn't publish you automatically; an actual person signs off.
+
+2. WHO CAN ACTUALLY SEE YOUR RATES
+   Your rate card is visible to developer accounts (and admin) — not to
+   other creators, not to brands, and not to anyone browsing while logged
+   out. The point is stopping casual competitor price-watching, not
+   hiding pricing from the people who'd actually book you. You always see
+   your own rates fine when you look at your own profile; everywhere else
+   the price is simply replaced with "Rates visible to developer
+   accounts." Reviews and the Q&A thread on your profile work the same
+   way in one respect — you need to be logged in (any role) to see them
+   at all, though unlike rates that's not role-restricted once you are.
+
+3. THREE WAYS DEVELOPERS PAY YOU
+   - Rate card: you publish a fixed price + deliverable (e.g. "1 TikTok
+     video — N180,000"). A developer sends a booking request against it
+     with a written brief of exactly what they want — that's what you're
+     agreeing to, and what delivery gets judged against later. You have
+     to accept it before they're able to pay; nothing charges
+     automatically just because they picked a price off your card.
+   - Custom offer: a developer proposes their own price for something
+     specific. You accept or decline.
+   - Open requests: developers post a budget publicly. You apply with
+     your own price; they pick who they want.
+   All three land in the same place once accepted — an Order — and all
+   three notify you the moment they arrive, with the developer's brief
+   shown right on the pending card so you're never guessing what you'd be
+   agreeing to.
+
+4. GETTING PAID
+   The moment a deal is agreed, the developer funds it — the full amount
+   is held before you start any work. You deliver, they approve (or it
+   auto-releases after 7 days if they go quiet), and the payout moves
+   straight to your bank account. If either of you needs to escalate
+   before that — see DISPUTES below.
+
+5. UPFRONT TOO
+   Anything with an audience can also list a future program and sell
+   slots in advance (see "Upfront listers" below) — a second income
+   stream on top of one-off bookings. Your own "Upfront programs" tab
+   also shows every individual sale against your listings — who bought,
+   what they paid, and where the payment stands — not just an aggregate
+   slots-sold count.
+
+6. WHY DEVELOPERS WILL TRUST YOU
+   - Public reviews: every completed order can be rated — your track
+     record is visible to any logged-in developer before they book you.
+   - Q&A on your profile: people can ask before they pay. Answered
+     questions build confidence for the next buyer too.
+   - Reply-rate badge: once you've answered a few questions, your
+     profile shows how fast you typically respond.
+
+
+FOR UPFRONT LISTERS
+--------------------
+Sell inventory in something you haven't made yet — like pre-selling ad
+slots in next quarter's newsletter, or sponsorships in a video series
+you're about to film.
+
+WHO THIS IS FOR
+   - Creators with an audience who want to pre-sell a planned series
+     before producing it.
+   - Brands — companies with their own media property (a newsletter, a
+     podcast, a digest) who aren't "hiring" anyone, they're selling their
+     own inventory. Brands get their own onboarding page, kept separate
+     from the creator flow.
+
+1. LISTING A PROGRAM
+   Describe it: title, niche, your audience (size, engagement), price per
+   slot, how many slots exist, and when it runs. Like creator profiles,
+   this goes to admin review first — judged on the details you give,
+   since there's no automatic metric to check for a media property. A
+   "List a program" button sits right on the public Upfront directory for
+   any creator/brand account, so you don't have to already know it's
+   tucked inside your own profile page to find it.
+
+2. ONCE APPROVED
+   Your listing appears in the public Upfront directory. Anyone can buy a
+   slot — a developer, another creator, even another brand — buying isn't
+   tied to a specific role.
+
+3. GETTING PAID
+   Same escrow logic as bespoke work: a buyer's payment is held the
+   moment they purchase a slot. Funds release to you once the program
+   actually runs (or the buyer confirms early) — automatically after 7
+   days past your stated run date either way.
+
+4. SAME TRUST TOOLS AS CREATORS
+   Your listing carries its own public rating once buyers start reviewing
+   completed slots, and has its own Q&A thread so buyers can ask about
+   audience details or format before committing.
+
+
+FOR DEVELOPERS
+---------------
+Find the right creator for your product, pay safely, and get real
+promotion — without wiring money to a stranger on trust alone.
+
+1. FINDING A CREATOR
+   Browse the creator directory, filtered by niche, platform, and rating
+   — every profile shows follower count, engagement, and (once they have
+   any) reviews and reply speed, so you're not choosing blind. The
+   directory itself opens on a clean top-5 "top rated" list rather than
+   dumping every creator on screen at once — an obvious "See all N" leads
+   into real pagination, and search or a filter jumps straight to the
+   full matching set. New creators approved since you last checked show
+   up as a badge count on the Creators nav link.
+
+2. THREE WAYS TO BOOK
+   - Book a rate card: see a listed price you like — write exactly what
+     you need in a short brief and send the booking request. The creator
+     has to accept it before you can pay; this isn't an instant
+     checkout, it's both sides agreeing to the same brief first.
+   - Send a custom offer: your budget doesn't match a listed rate —
+     propose your own price directly to a creator.
+   - Post a request: publish a budget and brief; creators apply, you pick
+     who you want to work with.
+   Once a creator accepts (any of the three ways), you'll see it in your
+   notifications with a direct link to fund the order.
+
+3. FUNDING & DELIVERY
+   Once accepted, you fund the order through Paystack — the money is
+   held, not handed over. The creator delivers, and you either approve
+   (releasing payment) or request a revision. Nothing pays out until
+   you're satisfied, or 7 days pass with no response from you.
+
+4. IF SOMETHING GOES WRONG — DISPUTES
+   Don't just go quiet and hope the auto-release doesn't fire on bad
+   work: either side can raise a dispute (from the order page) any time
+   after funding and before payout, with a short explanation of what's
+   wrong. That immediately pauses the auto-release clock — a disputed
+   order is no longer eligible for the 7-day sweep — and the other side
+   gets a chance to respond with their own side of it before an admin
+   makes the final call. It doesn't resolve itself automatically; a human
+   decides, same as the original eligibility/listing reviews do
+   elsewhere on the platform.
+
+5. THE REST OF THE TOOLKIT
+   - List your product so creators can see real traction before they
+     respond to a request.
+   - Post an open request when you'd rather have creators come to you.
+   - Buy an Upfront slot to get your product into a program someone else
+     already has an audience for.
+   - Leave a review once an order is paid — it's what the next developer
+     sees before they book the same creator.
+
+
+FOR ADMINS
+-----------
+Nothing goes live without a human decision, and nothing that involves
+money disappears with a click. Admin is where the platform is actually
+operated.
+
+1. THE REVIEW GATE
+   Creator profiles and Upfront listings never go public automatically —
+   clearing the eligibility bar only moves someone into your review
+   queue. You approve or reject; that decision is what makes them visible
+   to the rest of the platform.
+
+2. STANDING UP ACCOUNTS
+   Create any account type directly — developer, creator, brand, or
+   another admin — with a password you set and hand off yourself. Useful
+   for onboarding a partner brand or pre-approving a known creator
+   without them going through self-serve signup.
+
+3. FULL DATA CONTROL, WITH A SAFETY RAIL
+   Every entity on the platform — users, creators, brands, products,
+   requests, Upfront listings — can be edited or deleted from one place.
+   Financial records are the one exception: an Order or an Upfront
+   purchase can't simply be deleted. Instead you mark it DISPUTED or
+   REFUNDED (developer keeps their money), or — the piece that used to be
+   missing — RELEASE TO CREATOR, which resolves a dispute the other way
+   and actually pays the creator out. None of these three call Paystack
+   to reverse a transfer that's already gone out; they record what you've
+   determined happened.
+
+4. RESOLVING DISPUTES
+   A dispute can now reach you two ways: you notice something and flag it
+   yourself (unchanged), or — more often — a developer or creator raises
+   one themselves from their own order page. Either way it shows up in
+   Manage Data > Orders with the full thread inline: who raised it, their
+   reason, and the other side's response if they've given one. From
+   there it's a straight choice — Release to creator, or Refund the
+   developer. There's no timer forcing your hand; a party going silent is
+   just visible in the thread, not auto-resolved against them.
+
+5. SEEING THE WHOLE PLATFORM
+   The Analytics tab covers more than a snapshot now: total GMV and
+   platform fee revenue, a 30-day GMV trend chart, status breakdowns for
+   orders/purchases/offers (both by status and by which of the three
+   pricing paths they came from), users by role, creators/listings by
+   review status, product and open-request counts, and a top-5
+   creators-by-earnings leaderboard — all computed live from the same
+   tables your edit tools work on, not a separate snapshot that can drift.
+
+6. ACTING AS ANY ROLE
+   Your account carries a real developer, creator, and brand profile
+   behind the scenes, so you can book a rate card, list a product, apply
+   to a request, list an Upfront program, or buy a slot — the same as any
+   real user — to test a flow end to end or directly support someone,
+   without needing a second account. Your own creator/brand profile stays
+   out of the public directory though — it's a working account, not a
+   real listing. You're also the one role that always sees rate cards
+   regardless of whose profile you're looking at.
+
+
+---
+Pairwize — a Nigerian creator marketplace. Priced in Naira, paid through
+Paystack, held in escrow until the work is done.

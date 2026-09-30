@@ -1,15 +1,24 @@
 # Pairwize — Creator Marketplace for Indie & AI-Built Products
 
+> For a plain-English walkthrough of every workflow by role (creator,
+> developer, brand, admin) — including rate-card visibility rules and
+> dispute resolution — see [`Pairwize-Explained.txt`](Pairwize-Explained.txt).
+> This README covers setup and architecture.
+
 A gated marketplace where developers list products and browse creators with
-visible, niche-specific rate cards — priced in Naira, funded and paid
-on-platform via Paystack (creator payouts go to a Nigerian bank account;
-Stripe Connect doesn't support Nigerian payout accounts at all, which is
-why this isn't a Stripe app). Docker Compose, a service-layered
+niche-specific rate cards (visible to developer/admin accounts only — not
+other creators, brands, or logged-out visitors) — priced in Naira, funded
+and paid on-platform via Paystack (creator payouts go to a Nigerian bank
+account; Stripe Connect doesn't support Nigerian payout accounts at all,
+which is why this isn't a Stripe app). Docker Compose, a service-layered
 Express/Prisma backend, and a Next.js frontend, built as one running app
 end to end: register or log in (including Google Sign-In), browse and
-book a rate card, send/accept a custom offer, pick an applicant off a
-posted request, fund the order through Paystack's hosted checkout, carry
-it through the delivery/approval state machine, and leave a review.
+send a booking request against a rate card (with a written brief the
+creator has to accept before you can pay), send/accept a custom offer,
+pick an applicant off a posted request, fund the order through Paystack's
+hosted checkout, carry it through the delivery/approval state machine —
+raising a self-service dispute if something goes wrong along the way —
+and leave a review.
 
 Alongside the bespoke-work marketplace, **Upfront** is a second, separate
 transaction shape: a creator or a company (`BRAND` — a distinct role from
@@ -164,59 +173,93 @@ eligibility gate + admin approval queue), Brands (profile, no eligibility
 gate — only its listings are reviewed), Rate Cards, Products, Advert
 Requests, **Offers** (converges all three pricing paths — book a rate
 card, send/accept a custom offer, apply to and accept a request response
-— into one Order), Orders (full funding/release state machine with
-per-action authorization), **Upfront** (listings from a creator or brand,
-admin-reviewed, purchasable by any role, its own funding/release state
-machine), Payments (Paystack transactions, bank-account payout setup
+— into one Order; all three now start `PENDING` and require the other
+side to accept before an Order opens, including rate-card bookings, which
+also carry a developer-written `requirements` brief the creator is
+agreeing to), Orders (full funding/release state machine with
+per-action authorization, plus a self-service dispute lifecycle — either
+party can raise one with a reason while money is held, which excludes the
+order from the 7-day auto-release sweep; the other side can respond, and
+an admin resolves it via release-to-creator or refund), **Upfront**
+(listings from a creator or brand, admin-reviewed, purchasable by any
+role, its own funding/release state machine, plus a lister-facing sales
+list showing individual buyers against a listing, not just an aggregate
+count), Payments (Paystack transactions, bank-account payout setup
 shared by creators and brands, webhook handler dispatching to whichever
 domain a reference belongs to), admin CRUD across every domain (edit/delete
-for creators, brands, products, requests, Upfront listings; dispute/refund
-status overrides for Orders and Upfront purchases, since those are
-financial records that never get silently deleted), Reviews (the developer
-who hired a creator reviews them once an order is `PAID` — not the other
-way round, since a review's job is to help the *next* buyer decide),
-UpfrontReview (same shape for a completed Upfront purchase), Q&A (a public
-pre-purchase question thread on a creator profile or Upfront listing,
-answerable only by the account being asked about), Notifications
-(in-app only — no outbound email service is configured — raised at every
-order/purchase state change, review-queue decision, and Q&A event),
-SavedCreator (a developer's bookmark list), and Analytics (GMV, platform
-fee revenue, and status breakdowns for the admin dashboard, computed
-live from existing tables rather than a separate snapshot).
+for creators, brands, products, requests, Upfront listings; dispute/refund/
+release-to-creator status overrides for Orders, dispute/refund for Upfront
+purchases, since those are financial records that never get silently
+deleted), Reviews (the developer who hired a creator reviews them once an
+order is `PAID` — not the other way round, since a review's job is to
+help the *next* buyer decide), UpfrontReview (same shape for a completed
+Upfront purchase), Q&A (a pre-purchase question thread on a creator
+profile or Upfront listing, visible to any logged-in account and
+answerable only by the account being asked about), Notifications (in-app
+only — no outbound email service is configured — raised on every offer
+event (sent/accepted/declined), order/purchase state change, dispute
+raised/responded, new review, review-queue decision, and Q&A event),
+Badges (per-user "N new since you last looked" counts for Requests/
+Upfront/Creators, backing the nav pills), SavedCreator (a developer's
+bookmark list), and Analytics (GMV, platform fee revenue, a 30-day GMV
+trend, orders/offers/purchases status breakdowns — offers also broken
+down by which of the three pricing paths they came from — a top-5
+creators-by-earnings leaderboard, and product/open-request counts, all
+computed live from existing tables rather than a separate snapshot).
 
 **Frontend, wired to real API calls end to end:** register/login
 (including Google, with a Developer/Creator/Brand picker), creator
-directory (filter + sort) → creator profile (Book creates a real
-offer+order and redirects to checkout, or send a custom offer) →
-checkout (redirects to Paystack's hosted payment page, comes back through
-a callback route that verifies the transaction) → order status (live
-stepper, action buttons for start/submit/approve/request revision
-depending on role and status, review form once paid) → Offers inbox
-(creators accept/decline custom offers; developers pick an applicant off
-their posted requests) → My Orders. **Upfront**: a public `/upfront`
-directory and listing detail page with the same Paystack checkout/
-callback pattern, a separate `/upfront/purchases` buyer history (kept
-apart from `/orders` — a different kind of transaction), and Upfront
-listing management split by lister type — inside the existing
-`/creators/me` (its own tab, next to the unrelated rate-card tab) for
-creators, and a new `/brands/me` for brands, both sharing one extracted
-`PayoutAccountForm` component rather than duplicating the bank-resolve
-flow. Also: products directory + detail, requests board, an admin panel
-at `/admin` with five tabs — creator approvals, Upfront listing approvals,
-a "create any account type directly" form, a "Manage data" tab (per-entity
-edit/delete tables plus dispute/refund actions on Orders and Upfront
-purchases), and an Analytics dashboard (GMV, fee revenue, status
-breakdowns) — list-your-product and post-a-request forms. Creators,
-Products, and Upfront all got search + dropdown filters alongside their
-existing niche pills. A public rating badge (★ + review count) now shows
-on creator/listing cards and profile pages, backed by a reviews list and
-a leave-a-review form (developer-side on `/orders/[id]`, buyer-side on
-`/upfront/purchases`); a `QuestionBox` component handles the public Q&A
-thread on both creator profiles and Upfront listings; a `NotificationBell`
-in the nav polls for in-app notifications and marks them read on click;
-a heart-shaped `SaveButton` bookmarks a creator to the new
-`/creators/saved` page; and a creator profile shows a reply-rate/response-
-time badge once they've fielded at least 3 questions.
+directory (top-5 "top rated" by default with an obvious "See all N" into
+real pagination; search/filter jump straight past the teaser to the full
+matching set) → creator profile (rate card visible to developer/admin
+accounts only — everyone else sees "Rates are visible to developer
+accounts"; booking one opens an inline form for the developer's brief,
+which sends a `PENDING` offer rather than an instant order, or send a
+custom offer) → Offers inbox once the creator accepts (creators
+accept/decline with the requirements shown inline; developers pick an
+applicant off their posted requests or track bookings/offers they've
+sent) → checkout (redirects to Paystack's hosted payment page, comes back
+through a callback route that verifies the transaction; a non-developer
+landing on this page sees a read-only "waiting on payment" state, never a
+pay button) → order status (live stepper, action buttons for
+start/submit/approve/request revision depending on role and status, a
+"Raise a dispute" link once funded that pauses the auto-release clock and
+lets the other side respond inline, review form once paid) → My Orders.
+**Upfront**: a public `/upfront` directory (same top-5/pagination
+pattern, plus a "List a program" button for creator/brand/admin accounts
+linking straight to the right tab) and listing detail page with the same
+Paystack checkout/callback pattern, a separate `/upfront/purchases` buyer
+history (kept apart from `/orders` — a different kind of transaction),
+and Upfront listing management split by lister type — inside the
+existing `/creators/me` (its own tab, next to the unrelated rate-card
+tab) for creators, and a new `/brands/me` for brands, both sharing one
+extracted `PayoutAccountForm` component and both now showing individual
+sales against a listing, not just an aggregate count. Also: products
+directory + detail, requests board (now with search/niche filtering to
+match the other directories), an admin panel at `/admin` with five tabs —
+creator approvals, Upfront listing approvals, a "create any account type
+directly" form, a "Manage data" tab (per-entity edit/delete tables; Orders
+now show the dispute reason/response thread inline with Dispute/Release-
+to-creator/Refund actions), and an Analytics dashboard (GMV/fee revenue,
+a 30-day GMV trend chart, an offers funnel by status and by source, a
+top-creators leaderboard, product/request counts, plus the original
+status breakdowns) — list-your-product and post-a-request forms.
+Creators, Products, Requests, and Upfront all got search + dropdown
+filters alongside their existing niche pills. A public rating badge (★ +
+review count) now shows on creator/listing cards and profile pages,
+backed by a reviews list (visible to any logged-in account) and a
+leave-a-review form (developer-side on `/orders/[id]`, buyer-side on
+`/upfront/purchases`); a `QuestionBox` component handles the Q&A thread
+(same login requirement) on both creator profiles and Upfront listings; a
+`NotificationBell` in the nav polls for in-app notifications and marks
+them read on click; small "N new" badge pills on the Requests/Upfront/
+Creators nav links (role-dependent) clear once you visit that page; a
+heart-shaped `SaveButton` bookmarks a creator to the new `/creators/saved`
+page; and a creator profile shows a reply-rate/response-time badge once
+they've fielded at least 3 questions. The nav itself collapses
+personal/account links (My purchases, Saved, My profile, My Brand) into a
+dropdown rather than a flat row, since an admin account alone pulling in
+every role's links stopped fitting one line.
 
 ## Verified
 
@@ -239,3 +282,22 @@ exact question → answer it → the answer appears publicly), saving and
 unsaving a creator from `/creators/saved`, and the admin Analytics tab
 rendering live GMV/status/role breakdowns pulled straight from the
 database.
+
+Later additions verified live the same way, deployed and checked against
+the production VM after each change rather than only locally: rate-card
+booking end to end with the new requirements-then-accept flow (developer
+sends a booking request with a brief → creator sees it with the brief
+shown inline → accepts → order opens → developer funds it); the full
+dispute lifecycle (developer raises a dispute on a funded order → creator
+gets notified and responds → admin sees the full thread in Manage Data →
+resolves it via release-to-creator, which correctly hits the same
+payout-account guard the normal approval path does); rate-card visibility
+confirmed at the API level, not just hidden in the UI (curled `/creators`
+with a creator's own token vs. a developer's token vs. no token at all,
+confirming `rateCardItems` and the internal `minPriceKobo` sort key are
+actually absent from the response for a creator viewing someone else's
+card, not merely unrendered); the nav badge counts incrementing/clearing
+correctly across all three roles; and the admin nav overlap fix checked
+at 1024px (falls back to the hamburger menu), 1280px, and 1440px after an
+earlier attempt at the same fix didn't actually hold up at the narrower
+width.

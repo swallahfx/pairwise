@@ -8,12 +8,14 @@ import { Pill } from "@/components/ui/Pill";
 import { Money } from "@/components/ui/Money";
 import { Rating } from "@/components/ui/Rating";
 import { Pagination } from "@/components/ui/Pagination";
+import { useAuth } from "@/lib/auth";
 
 const NICHES = ["AI Tools", "Dev Tools", "SaaS", "Indie Apps", "Productivity", "Fintech"];
 const TOP_COUNT = 5;
 const PAGE_SIZE = 5;
 
 export default function UpfrontDirectoryPage() {
+  const { user } = useAuth();
   const [selected, setSelected] = useState<string[]>([]);
   const [listerType, setListerType] = useState<"all" | "CREATOR" | "BRAND">("all");
   const [search, setSearch] = useState("");
@@ -54,14 +56,25 @@ export default function UpfrontDirectoryPage() {
   return (
     <div>
       <div className="bg-gradient-to-br from-accent/5 to-accent-teal/5">
-        <div className="px-4 sm:px-8 lg:px-14 pt-12 pb-7 max-w-3xl">
-          <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight mb-3">
-            Reserve a slot before it exists.
-          </h1>
-          <p className="text-ink-muted text-base leading-relaxed">
-            Creators and brands list upcoming programs with a described audience — pay upfront to
-            reserve a slot, funds release once the program actually runs.
-          </p>
+        <div className="px-4 sm:px-8 lg:px-14 pt-12 pb-7">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 max-w-3xl">
+            <div>
+              <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight mb-3">
+                Reserve a slot before it exists.
+              </h1>
+              <p className="text-ink-muted text-base leading-relaxed">
+                Creators and brands list upcoming programs with a described audience — pay upfront to
+                reserve a slot, funds release once the program actually runs.
+              </p>
+            </div>
+            {(user?.role === "CREATOR" || user?.role === "BRAND" || user?.role === "ADMIN") && (
+              <Link href={user.role === "BRAND" ? "/brands/me?tab=upfront" : "/creators/me?tab=upfront"}>
+                <button className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-5 py-2.5 rounded-lg flex-shrink-0">
+                  List a program
+                </button>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 

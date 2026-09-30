@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { hasRole, useAuth } from "@/lib/auth";
 import { Money } from "@/components/ui/Money";
@@ -36,11 +37,17 @@ export default function BrandMePage() {
     return <div className="p-14 text-ink-muted">This page is only for brand accounts.</div>;
   }
 
-  return <BrandMeContent />;
+  return (
+    <Suspense>
+      <BrandMeContent />
+    </Suspense>
+  );
 }
 
 function BrandMeContent() {
-  const [tab, setTab] = useState<Tab>("profile");
+  const searchParams = useSearchParams();
+  const initialTab = TABS.includes(searchParams.get("tab") as Tab) ? (searchParams.get("tab") as Tab) : "profile";
+  const [tab, setTab] = useState<Tab>(initialTab);
   const queryClient = useQueryClient();
   const { data: brand, isLoading } = useQuery({ queryKey: ["brand-me"], queryFn: api.brands.getMe });
 

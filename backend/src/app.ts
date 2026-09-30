@@ -18,6 +18,7 @@ import { brandsRouter } from "./modules/brands/brands.routes";
 import { qaRouter } from "./modules/qa/qa.routes";
 import { notificationsRouter } from "./modules/notifications/notifications.routes";
 import { analyticsRouter } from "./modules/analytics/analytics.routes";
+import { badgesRouter } from "./modules/badges/badges.routes";
 
 export const app = express();
 
@@ -52,5 +53,6 @@ app.use("/brands", brandsRouter);
 app.use("/qa", qaRouter);
 app.use("/notifications", notificationsRouter);
 app.use("/analytics", analyticsRouter);
+app.use("/badges", badgesRouter);
 
 app.use(errorHandler);

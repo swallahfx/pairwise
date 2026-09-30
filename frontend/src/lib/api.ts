@@ -250,5 +250,10 @@ export const api = {
   },
   analytics: {
     summary: () => request<import("@/types").AnalyticsSummary>("/analytics/summary")
+  },
+  badges: {
+    counts: () => request<import("@/types").BadgeCounts>("/badges/counts"),
+    markViewed: (section: "requests" | "upfront" | "creators") =>
+      request<void>("/badges/mark-viewed", { method: "POST", body: JSON.stringify({ section }) })
   }
 };

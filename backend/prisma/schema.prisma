@@ -97,6 +97,14 @@ model User {
   role          Role
   createdAt     DateTime @default(now())
 
+  // Drive the "N new" badges on the Requests/Upfront/Creators nav links —
+  // null means "never viewed", so everything currently there counts as new
+  // rather than nothing, which matters for existing accounts that predate
+  // this field just as much as brand-new ones.
+  lastViewedRequestsAt DateTime?
+  lastViewedUpfrontAt  DateTime?
+  lastViewedCreatorsAt DateTime?
+
   developerProfile DeveloperProfile?
   creatorProfile   CreatorProfile?
   brandProfile     BrandProfile?

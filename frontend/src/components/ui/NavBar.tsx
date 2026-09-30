@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { NotificationBell } from "./NotificationBell";
 
@@ -18,6 +20,22 @@ export function NavBar() {
   const router = useRouter();
   const { user, logout, isLoading } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const { data: badgeCounts } = useQuery({
+    queryKey: ["badge-counts"],
+    queryFn: api.badges.counts,
+    enabled: !!user,
+    refetchInterval: 20000
+  });
+
+  // Only creators/upfront/creators-directory carry an unread-style badge —
+  // everything else in the nav is either an action (Admin, List your
+  // product) or a personal list with no "new since last visit" concept.
+  const badgeForHref: Record<string, number | undefined> = {
+    "/requests": badgeCounts?.requests,
+    "/upfront": badgeCounts?.upfront,
+    "/creators": badgeCounts?.creators
+  };
 
   // Buying a slot is open to any role, so "My purchases" shows for
   // everyone logged in — but listing management stays split by role:
@@ -75,9 +93,10 @@ export function NavBar() {
               <Link
                 key={l.href}
                 href={l.href}
-                className={pathname?.startsWith(l.href) ? "font-semibold" : "text-ink-muted"}
+                className={`flex items-center gap-1.5 ${pathname?.startsWith(l.href) ? "font-semibold" : "text-ink-muted"}`}
               >
                 {l.label}
+                <NavBadge count={badgeForHref[l.href]} />
               </Link>
             ))}
           </div>
@@ -156,11 +175,12 @@ export function NavBar() {
                 key={l.href}
                 href={l.href}
                 onClick={() => setMenuOpen(false)}
-                className={`py-2.5 text-[15px] ${
+                className={`py-2.5 text-[15px] flex items-center gap-1.5 ${
                   pathname?.startsWith(l.href) ? "font-semibold" : "text-ink-muted"
                 }`}
               >
                 {l.label}
+                <NavBadge count={badgeForHref[l.href]} />
               </Link>
             ))}
           </div>
@@ -188,5 +208,14 @@ export function NavBar() {
         </div>
       )}
     </div>
+  );
+}
+
+function NavBadge({ count }: { count: number | undefined }) {
+  if (!count) return null;
+  return (
+    <span className="bg-gradient-to-r from-accent to-accent-teal text-white text-[11px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center leading-none">
+      {count > 9 ? "9+" : count}
+    </span>
   );
 }

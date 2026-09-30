@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { Pill } from "@/components/ui/Pill";
@@ -16,6 +16,14 @@ const PAGE_SIZE = 5;
 
 export default function UpfrontDirectoryPage() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!user) return;
+    api.badges.markViewed("upfront").then(() => queryClient.invalidateQueries({ queryKey: ["badge-counts"] }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.userId]);
+
   const [selected, setSelected] = useState<string[]>([]);
   const [listerType, setListerType] = useState<"all" | "CREATOR" | "BRAND">("all");
   const [search, setSearch] = useState("");

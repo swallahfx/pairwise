@@ -249,6 +249,12 @@ export interface NotificationsResponse {
   unreadCount: number;
 }
 
+export interface BadgeCounts {
+  requests: number;
+  upfront: number;
+  creators: number;
+}
+
 export interface SavedCreator {
   id: string;
   createdAt: string;

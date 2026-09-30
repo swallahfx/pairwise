@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { Pill } from "@/components/ui/Pill";
@@ -17,7 +17,16 @@ const PAGE_SIZE = 5;
 
 export default function CreatorsDirectoryPage() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const canSeeRates = user?.role === "DEVELOPER" || user?.role === "ADMIN";
+
+  useEffect(() => {
+    if (!user) return;
+    api.badges.markViewed("creators").then(() => queryClient.invalidateQueries({ queryKey: ["badge-counts"] }));
+    // Fires once per page visit, not on every filter/sort change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.userId]);
+
   const [selected, setSelected] = useState<string[]>([]);
   const [sort, setSort] = useState<"top" | "price_asc" | "price_desc">("top");
   const [platform, setPlatform] = useState("all");

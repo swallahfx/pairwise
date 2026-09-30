@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { hasRole, useAuth } from "@/lib/auth";
@@ -16,8 +16,15 @@ const PAGE_SIZE = 5;
 export default function RequestsPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { data: requests, isLoading } = useQuery({ queryKey: ["requests"], queryFn: api.requests.list });
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    api.badges.markViewed("requests").then(() => queryClient.invalidateQueries({ queryKey: ["badge-counts"] }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.userId]);
   const [niche, setNiche] = useState("all");
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState(false);

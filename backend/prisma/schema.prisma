@@ -85,6 +85,7 @@ enum NotificationType {
   LISTING_REVIEW_STATUS
   QUESTION_ASKED
   QUESTION_ANSWERED
+  NEW_REVIEW
 }
 
 model User {

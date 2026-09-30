@@ -66,6 +66,13 @@ export default function OrderStatusPage() {
         </div>
       </div>
 
+      {order.offer.requirements && (
+        <div className="mt-4 bg-surface border border-border rounded-card p-5">
+          <div className="text-[13px] font-semibold text-ink-muted mb-1.5">What was requested</div>
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">{order.offer.requirements}</p>
+        </div>
+      )}
+
       {isDisputed ? (
         <div className="mt-10 p-6 bg-surface border border-border rounded-card">
           <div className="text-sm font-semibold">This order is {order.status.toLowerCase()}.</div>

@@ -282,17 +282,18 @@ function OfferHistoryTable({ offers }: { offers: Offer[] }) {
       {offers.map((o, i) => (
         <div
           key={o.id}
-          className={`flex items-center justify-between px-5 py-3.5 ${
+          className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-5 py-3.5 ${
             i < offers.length - 1 ? "border-b border-border" : ""
           }`}
         >
-          <div>
+          <div className="min-w-0">
             <div className="text-sm font-semibold">{o.deliverable}</div>
             <div className="text-xs text-ink-muted mt-0.5">
               {o.creator.user.name} · {o.source.replace("_", " ").toLowerCase()}
             </div>
+            {o.requirements && <div className="text-xs text-ink-muted mt-1">{o.requirements}</div>}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-shrink-0">
             <Money kobo={o.priceKobo} size="text-lg" />
             {statusPill(o.status)}
           </div>

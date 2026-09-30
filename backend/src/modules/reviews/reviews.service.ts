@@ -1,5 +1,6 @@
 import { prisma } from "../../config/db";
 import { ConflictError, ForbiddenError, NotFoundError } from "../../common/errors";
+import { notificationsService } from "../notifications/notifications.service";
 import { reviewsRepository } from "./reviews.repository";
 import { CreateReviewInput } from "./reviews.schema";
 
@@ -11,7 +12,10 @@ import { CreateReviewInput } from "./reviews.schema";
 // the buyer's side, not the creator's own account.
 export const reviewsService = {
   async create(developerUserId: string, orderId: string, input: CreateReviewInput) {
-    const order = await prisma.order.findUnique({ where: { id: orderId }, include: { offer: true } });
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { offer: { include: { creator: { select: { userId: true } }, developer: { include: { user: { select: { name: true } } } } } } }
+    });
     if (!order) throw new NotFoundError("Order");
     if (order.status !== "PAID") throw new ConflictError("Can only review a completed order");
 
@@ -23,7 +27,14 @@ export const reviewsService = {
     const existing = await reviewsRepository.findByOrder(orderId);
     if (existing) throw new ConflictError("This order already has a review");
 
-    return reviewsRepository.create(orderId, developer.id, order.offer.creatorId, input.rating, input.text);
+    const review = await reviewsRepository.create(orderId, developer.id, order.offer.creatorId, input.rating, input.text);
+    notificationsService.notify(
+      order.offer.creator.userId,
+      "NEW_REVIEW",
+      `${order.offer.developer.user.name} left you a ${input.rating}-star review.`,
+      `/creators/${order.offer.creatorId}`
+    );
+    return review;
   },
 
   listForCreator(creatorId: string) {

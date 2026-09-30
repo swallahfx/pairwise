@@ -79,6 +79,7 @@ export interface Order {
   paidAt: string | null;
   offer: {
     deliverable: string;
+    requirements: string | null;
     creator: { userId: string; handle: string; user: { name: string } };
     developer: { userId: string; user: { name: string } };
   };
@@ -231,7 +232,8 @@ export type NotificationType =
   | "CREATOR_REVIEW_STATUS"
   | "LISTING_REVIEW_STATUS"
   | "QUESTION_ASKED"
-  | "QUESTION_ANSWERED";
+  | "QUESTION_ANSWERED"
+  | "NEW_REVIEW";
 
 export interface AppNotification {
   id: string;
@@ -261,7 +263,13 @@ export interface AnalyticsSummary {
   usersByRole: { role: string; count: number }[];
   creatorsByGateStatus: { status: string; count: number }[];
   listingsByGateStatus: { status: string; count: number }[];
+  offersByStatus: { status: string; count: number }[];
+  offersBySource: { status: string; count: number }[];
   totalReviews: number;
   totalQuestions: number;
   answeredQuestions: number;
+  totalProducts: number;
+  openRequests: number;
+  revenueByDay: { date: string; gmvKobo: number }[];
+  topCreatorsByEarnings: { name: string; handle: string; earningsKobo: number }[];
 }

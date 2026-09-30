@@ -61,7 +61,9 @@ export default function MyOrdersPage() {
             order.offer.developer.userId === user.userId
               ? order.offer.creator.user.name
               : order.offer.developer.user.name;
-          const href = order.status === "AGREED" ? `/checkout/${order.id}` : `/orders/${order.id}`;
+          const isDeveloperHere = order.offer.developer.userId === user.userId;
+          const href =
+            order.status === "AGREED" && isDeveloperHere ? `/checkout/${order.id}` : `/orders/${order.id}`;
           return (
             <Link key={order.id} href={href} className="block">
               <div

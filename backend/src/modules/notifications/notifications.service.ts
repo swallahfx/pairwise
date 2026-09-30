@@ -7,7 +7,8 @@ type NotificationType =
   | "CREATOR_REVIEW_STATUS"
   | "LISTING_REVIEW_STATUS"
   | "QUESTION_ASKED"
-  | "QUESTION_ANSWERED";
+  | "QUESTION_ANSWERED"
+  | "NEW_REVIEW";
 
 // The one place every other module calls into to raise a notification —
 // purely in-app for now (no outbound email service is configured), so this

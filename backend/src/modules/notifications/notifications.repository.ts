@@ -7,7 +7,8 @@ type NotificationType =
   | "CREATOR_REVIEW_STATUS"
   | "LISTING_REVIEW_STATUS"
   | "QUESTION_ASKED"
-  | "QUESTION_ANSWERED";
+  | "QUESTION_ANSWERED"
+  | "NEW_REVIEW";
 
 export const notificationsRepository = {
   create(userId: string, type: NotificationType, message: string, link?: string) {

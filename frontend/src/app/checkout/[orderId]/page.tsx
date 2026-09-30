@@ -3,11 +3,13 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { Money } from "@/components/ui/Money";
 import Link from "next/link";
 
 export default function CheckoutPage() {
   const params = useParams<{ orderId: string }>();
+  const { user } = useAuth();
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", params.orderId],
@@ -28,15 +30,26 @@ export default function CheckoutPage() {
   if (isLoading) return <div className="p-14 text-ink-muted">Loading…</div>;
   if (!order) return <div className="p-14 text-ink-muted">Order not found.</div>;
 
+  // This page only makes sense for the developer — they're the one who
+  // pays. A creator landing here (e.g. from the shared /orders list, or a
+  // stale link) should see something read-only, never a "pay" button:
+  // the backend would reject it anyway (fund() requires the developer),
+  // but showing it at all is confusing for someone who isn't paying.
+  const isDeveloperHere = user?.userId === order.offer.developer.userId;
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 flex flex-col lg:flex-row gap-8 lg:gap-14">
       <div className="flex-1">
         <Link href={`/creators`} className="text-sm text-ink-muted">
           ← Back to directory
         </Link>
-        <h1 className="font-display text-[28px] font-semibold mt-5 mb-2">Fund this order</h1>
+        <h1 className="font-display text-[28px] font-semibold mt-5 mb-2">
+          {isDeveloperHere ? "Fund this order" : "Order agreed"}
+        </h1>
         <p className="text-ink-muted mb-8 leading-relaxed">
-          {order.offer.creator.user.name} gets paid the moment you approve the work — not before.
+          {isDeveloperHere
+            ? `${order.offer.creator.user.name} gets paid the moment you approve the work — not before.`
+            : `Waiting for ${order.offer.developer.user.name} to fund this order before work begins.`}
         </p>
 
         <div className="flex items-start gap-3 p-4 bg-surface border border-border rounded-lg mb-6">
@@ -50,6 +63,10 @@ export default function CheckoutPage() {
         {order.status !== "AGREED" ? (
           <div className="w-full bg-ground border border-border text-ink-muted py-3.5 rounded-lg font-semibold text-[15px] text-center">
             Already {order.status.toLowerCase().replace("_", " ")}
+          </div>
+        ) : !isDeveloperHere ? (
+          <div className="w-full bg-ground border border-border text-ink-muted py-3.5 rounded-lg font-semibold text-[15px] text-center">
+            Waiting on {order.offer.developer.user.name} to pay
           </div>
         ) : (
           <button

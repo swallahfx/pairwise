@@ -10,8 +10,9 @@ const config: Config = {
         ink: "#17160F",
         "ink-muted": "#6B6858",
         border: "#E7E2D8",
-        money: "#0D7A5F",
-        accent: "#4338CA"
+        money: "#0AA7B5",
+        accent: "#1476E8",
+        "accent-teal": "#17D0C1"
       },
       fontFamily: {
         display: ["var(--font-space-grotesk)", "sans-serif"],

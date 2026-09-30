@@ -63,9 +63,10 @@ export function NavBar() {
     <div className="border-b border-border bg-surface relative">
       <div className="flex items-center justify-between px-4 sm:px-8 lg:px-14 py-3 lg:py-5">
         <div className="flex items-center gap-10 min-w-0">
-          <Link href="/" className="flex-shrink-0" onClick={() => setMenuOpen(false)}>
-            {/* eslint-disable-next-line @next/next/no-img-element -- static local SVG, no benefit from next/image's raster optimization */}
-            <img src="/logo.svg" alt="Pairwize" className="h-9 w-auto lg:h-10" />
+          <Link href="/" className="flex-shrink-0 flex items-center gap-2" onClick={() => setMenuOpen(false)}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- static local PNG, no benefit from next/image's raster optimization */}
+            <img src="/logo-mark.png" alt="" className="h-8 w-8 lg:h-9 lg:w-9" />
+            <span className="font-display font-bold text-lg lg:text-xl tracking-tight">Pairwize</span>
           </Link>
 
           {/* Desktop nav links — hidden below lg, replaced by the menu panel */}
@@ -107,7 +108,7 @@ export function NavBar() {
               Log in
             </Link>
             <Link href="/register">
-              <button className="bg-accent text-white text-sm font-semibold px-5 py-2.5 rounded-lg">
+              <button className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-5 py-2.5 rounded-lg">
                 Register
               </button>
             </Link>
@@ -178,7 +179,7 @@ export function NavBar() {
                 Log in
               </Link>
               <Link href="/register" onClick={() => setMenuOpen(false)}>
-                <button className="w-full bg-accent text-white text-sm font-semibold px-5 py-3 rounded-lg">
+                <button className="w-full bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-5 py-3 rounded-lg">
                   Register
                 </button>
               </Link>

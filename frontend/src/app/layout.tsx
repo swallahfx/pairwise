@@ -19,7 +19,7 @@ const ibmPlex = IBM_Plex_Sans({
 export const metadata: Metadata = {
   title: "Pairwize — Creator Marketplace",
   description: "Find creators who already cover your niche, with the rate up front.",
-  icons: { icon: "/logo.svg" }
+  icons: { icon: "/logo-mark.png" }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

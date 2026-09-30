@@ -20,6 +20,7 @@ export function NavBar() {
   const router = useRouter();
   const { user, logout, isLoading } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   const { data: badgeCounts } = useQuery({
     queryKey: ["badge-counts"],
@@ -37,13 +38,14 @@ export function NavBar() {
     "/creators": badgeCounts?.creators
   };
 
-  // Buying a slot is open to any role, so "My purchases" shows for
-  // everyone logged in — but listing management stays split by role:
-  // a creator's listings live under their existing profile page, a
-  // brand's under its own, never a shared generic form for both. Admin
-  // gets every link, not just "Admin" — they hold a real
-  // Developer/Creator/Brand profile too (see backend's adminProfileBundle)
-  // and can exercise any flow on the platform, not just the admin panel.
+  // Primary nav: the marketplace sections themselves, plus Admin/Offers/
+  // Orders where the role calls for them. Admin gets every role's primary
+  // link, not just "Admin" — they hold a real Developer/Creator/Brand
+  // profile too (see backend's adminProfileBundle) and can exercise any
+  // flow on the platform, not just the admin panel. Personal/account links
+  // (purchases, saved, profile pages) live in the account dropdown below
+  // instead of here — with admin alone pulling in every role's links, a
+  // single flat top-level row stopped fitting any reasonable desktop width.
   const authedLinks = !user
     ? links
     : [
@@ -54,7 +56,16 @@ export function NavBar() {
               { href: "/offers", label: "Offers" },
               { href: "/orders", label: "Orders" }
             ]
-          : []),
+          : [])
+      ];
+
+  // Buying a slot is open to any role, so "My purchases"/"Saved" show for
+  // everyone logged in — but listing management stays split by role: a
+  // creator's listings live under their existing profile page, a brand's
+  // under its own, never a shared generic form for both.
+  const accountLinks = !user
+    ? []
+    : [
         { href: "/upfront/purchases", label: "My purchases" },
         { href: "/creators/saved", label: "Saved" },
         ...(user.role === "CREATOR" || user.role === "ADMIN" ? [{ href: "/creators/me", label: "My profile" }] : []),
@@ -88,7 +99,7 @@ export function NavBar() {
           </Link>
 
           {/* Desktop nav links — hidden below lg, replaced by the menu panel */}
-          <div className="hidden lg:flex gap-7 text-[15px]">
+          <div className="hidden xl:flex gap-7 text-[15px]">
             {authedLinks.map((l) => (
               <Link
                 key={l.href}
@@ -104,11 +115,45 @@ export function NavBar() {
 
         {/* Desktop right side */}
         {isLoading ? null : user ? (
-          <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
+          <div className="hidden xl:flex items-center gap-4 flex-shrink-0">
             <NotificationBell />
-            <div className="text-right leading-tight">
-              <div className="text-sm font-semibold">{user.name}</div>
-              <div className="text-xs text-ink-muted">{roleLabel}</div>
+            <div className="relative">
+              <button
+                onClick={() => setAccountOpen((o) => !o)}
+                className="text-right leading-tight flex items-center gap-1.5"
+              >
+                <span>
+                  <span className="block text-sm font-semibold">{user.name}</span>
+                  <span className="block text-xs text-ink-muted">{roleLabel}</span>
+                </span>
+                <span className="text-ink-muted text-xs mt-0.5">▾</span>
+              </button>
+              {accountOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setAccountOpen(false)} />
+                  <div className="absolute right-0 top-9 z-20 w-52 bg-surface border border-border rounded-card shadow-lg overflow-hidden py-1.5">
+                    {accountLinks.map((l) => (
+                      <Link
+                        key={l.href}
+                        href={l.href}
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-1.5 px-4 py-2 text-sm text-ink hover:bg-ground"
+                      >
+                        {l.label}
+                        <NavBadge count={badgeForHref[l.href]} />
+                      </Link>
+                    ))}
+                    <div className="border-t border-border mt-1.5 pt-1.5">
+                      <button
+                        onClick={onLogout}
+                        className="w-full text-left px-4 py-2 text-sm text-ink-muted hover:bg-ground"
+                      >
+                        Log out
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
             {(user.role === "DEVELOPER" || user.role === "ADMIN") && (
               <Link href="/products/new">
@@ -117,12 +162,9 @@ export function NavBar() {
                 </button>
               </Link>
             )}
-            <button onClick={onLogout} className="text-sm text-ink-muted font-semibold px-2">
-              Log out
-            </button>
           </div>
         ) : (
-          <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
+          <div className="hidden xl:flex items-center gap-3 flex-shrink-0">
             <Link href="/login" className="text-sm font-semibold text-ink-muted">
               Log in
             </Link>
@@ -135,7 +177,7 @@ export function NavBar() {
         )}
 
         {/* Mobile / tablet: bell (if logged in) + hamburger */}
-        <div className="flex lg:hidden items-center gap-2 flex-shrink-0">
+        <div className="flex xl:hidden items-center gap-2 flex-shrink-0">
           {!isLoading && user && <NotificationBell />}
           <button
             onClick={() => setMenuOpen((o) => !o)}
@@ -156,7 +198,7 @@ export function NavBar() {
 
       {/* Mobile / tablet menu panel */}
       {menuOpen && (
-        <div className="lg:hidden border-t border-border bg-surface px-4 sm:px-8 py-4 max-h-[calc(100vh-56px)] overflow-y-auto">
+        <div className="xl:hidden border-t border-border bg-surface px-4 sm:px-8 py-4 max-h-[calc(100vh-56px)] overflow-y-auto">
           {!isLoading && user && (
             <div className="flex items-center justify-between pb-4 mb-3 border-b border-border">
               <div>
@@ -184,6 +226,24 @@ export function NavBar() {
               </Link>
             ))}
           </div>
+
+          {accountLinks.length > 0 && (
+            <div className="flex flex-col gap-1 mt-3 pt-3 border-t border-border">
+              {accountLinks.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setMenuOpen(false)}
+                  className={`py-2.5 text-[15px] flex items-center gap-1.5 ${
+                    pathname?.startsWith(l.href) ? "font-semibold" : "text-ink-muted"
+                  }`}
+                >
+                  {l.label}
+                  <NavBadge count={badgeForHref[l.href]} />
+                </Link>
+              ))}
+            </div>
+          )}
 
           {!isLoading && user && (user.role === "DEVELOPER" || user.role === "ADMIN") && (
             <Link href="/products/new" onClick={() => setMenuOpen(false)}>

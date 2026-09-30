@@ -250,11 +250,19 @@ export const upfrontService = {
       throw new ConflictError("The lister has not set up a payout account yet");
     }
 
-    const transfer = await paymentsService.transferToCreator(
-      purchase.priceKobo,
-      recipientCode,
-      `Payout for upfront purchase ${purchase.id}`
-    );
+    let transfer: Awaited<ReturnType<typeof paymentsService.transferToCreator>>;
+    try {
+      transfer = await paymentsService.transferToCreator(
+        purchase.priceKobo,
+        recipientCode,
+        `Payout for upfront purchase ${purchase.id}`
+      );
+    } catch (err) {
+      // Same reasoning as orders.service's payoutToCreator — surface
+      // Paystack's actual reason (e.g. an account-tier restriction) instead
+      // of a generic 500 that tells the caller nothing.
+      throw new ConflictError(`Payout failed: ${err instanceof Error ? err.message : "unknown Paystack error"}`);
+    }
 
     const updated = await upfrontRepository.updatePurchase(purchaseId, {
       status: "PAID",

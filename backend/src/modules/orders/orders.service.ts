@@ -39,11 +39,21 @@ async function payoutToCreator(order: NonNullable<OrderWithParties>) {
   if (!recipientCode) {
     throw new ConflictError("Creator has not set up a payout account yet");
   }
-  const transfer = await paymentsService.transferToCreator(
-    order.priceKobo,
-    recipientCode,
-    `Payout for order ${order.id}`
-  );
+  let transfer: Awaited<ReturnType<typeof paymentsService.transferToCreator>>;
+  try {
+    transfer = await paymentsService.transferToCreator(
+      order.priceKobo,
+      recipientCode,
+      `Payout for order ${order.id}`
+    );
+  } catch (err) {
+    // Paystack's own message here is the actionable part (e.g. "You cannot
+    // initiate third party payouts as a starter business" — an account-tier
+    // restriction, not a bug) — surface it as a real 409 instead of letting
+    // it fall through to the generic 500 handler, which logs it but tells
+    // the caller nothing.
+    throw new ConflictError(`Payout failed: ${err instanceof Error ? err.message : "unknown Paystack error"}`);
+  }
   return ordersRepository.update(order.id, {
     status: "PAID",
     approvedAt: new Date(),

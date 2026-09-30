@@ -3,10 +3,19 @@ import { env } from "../../config/env";
 import { notificationsService } from "../notifications/notifications.service";
 import { paymentsService } from "../payments/payments.service";
 import { ordersRepository } from "./orders.repository";
+import { RaiseDisputeInput, RespondToDisputeInput } from "./orders.schema";
 
 const AUTO_APPROVE_DAYS = 7;
 
+// Not an automatic deadline — nothing forces a decision when this passes.
+// It's purely what the UI shows an admin ("response overdue by 2 days") so
+// a party going silent is visible at a glance instead of something an
+// admin has to notice by comparing dates themselves.
+const DISPUTE_RESPONSE_DAYS = 5;
+
 type OrderWithParties = Awaited<ReturnType<typeof ordersRepository.findById>>;
+
+const DISPUTABLE_STATUSES = ["FUNDED", "IN_PROGRESS", "REVISION_REQUESTED", "SUBMITTED"];
 
 // Every write below acts on money or on the state that controls when money
 // moves, so each one checks the acting user is actually the developer or
@@ -21,6 +30,26 @@ function assertIsCreator(order: NonNullable<OrderWithParties>, userId: string) {
   if (order.offer.creator.userId !== userId) {
     throw new ForbiddenError("Only the creator on this order can do that");
   }
+}
+
+// Shared by the normal SUBMITTED->approve path and the DISPUTED->admin
+// override path — both end the same way, actually moving money.
+async function payoutToCreator(order: NonNullable<OrderWithParties>) {
+  const recipientCode = order.offer.creator.paystackRecipientCode;
+  if (!recipientCode) {
+    throw new ConflictError("Creator has not set up a payout account yet");
+  }
+  const transfer = await paymentsService.transferToCreator(
+    order.priceKobo,
+    recipientCode,
+    `Payout for order ${order.id}`
+  );
+  return ordersRepository.update(order.id, {
+    status: "PAID",
+    approvedAt: new Date(),
+    paidAt: new Date(),
+    paystackTransferCode: transfer.transfer_code
+  });
 }
 
 // Every transition below is intentionally explicit and named after a step
@@ -175,34 +204,102 @@ export const ordersService = {
     return overdue.length;
   },
 
-  async release(orderId: string, resultStatus: "APPROVED" | "AUTO_APPROVED") {
+  async release(orderId: string, _resultStatus: "APPROVED" | "AUTO_APPROVED") {
     const order = await ordersRepository.findById(orderId);
     if (!order || order.status !== "SUBMITTED") {
       throw new ConflictError("Order must be submitted before it can be approved");
     }
-    const recipientCode = order.offer.creator.paystackRecipientCode;
-    if (!recipientCode) {
-      throw new ConflictError("Creator has not set up a payout account yet");
-    }
-
-    const transfer = await paymentsService.transferToCreator(
-      order.priceKobo,
-      recipientCode,
-      `Payout for order ${order.id}`
-    );
-
-    const updated = await ordersRepository.update(orderId, {
-      status: "PAID",
-      approvedAt: new Date(),
-      paidAt: new Date(),
-      paystackTransferCode: transfer.transfer_code
-    });
+    const updated = await payoutToCreator(order);
     notificationsService.notify(
       order.offer.creator.userId,
       "ORDER_UPDATE",
       `Payment released for "${order.offer.deliverable}".`,
       `/orders/${order.id}`
     );
+    return updated;
+  },
+
+  // Self-service dispute: either party on the order can raise one, as long
+  // as money is actually at stake (funded but not yet paid out) — this is
+  // what a developer facing a creator who's gone quiet after a bad
+  // delivery actually needs, instead of just not clicking "approve" and
+  // hoping the 7-day auto-release doesn't quietly pay the creator anyway.
+  async raiseDispute(orderId: string, userId: string, input: RaiseDisputeInput) {
+    const order = await ordersRepository.findById(orderId);
+    if (!order) throw new NotFoundError("Order");
+    const isDeveloper = order.offer.developer.userId === userId;
+    const isCreator = order.offer.creator.userId === userId;
+    if (!isDeveloper && !isCreator) {
+      throw new ForbiddenError("Only the developer or creator on this order can raise a dispute");
+    }
+    if (!DISPUTABLE_STATUSES.includes(order.status)) {
+      throw new ConflictError(`Cannot raise a dispute on an order in status ${order.status}`);
+    }
+
+    const updated = await ordersRepository.update(orderId, {
+      status: "DISPUTED",
+      disputeReason: input.reason,
+      disputedByUserId: userId,
+      disputedAt: new Date()
+    });
+
+    const otherPartyId = isDeveloper ? order.offer.creator.userId : order.offer.developer.userId;
+    const raiserName = isDeveloper ? order.offer.developer.user.name : order.offer.creator.user.name;
+    notificationsService.notify(
+      otherPartyId,
+      "ORDER_UPDATE",
+      `${raiserName} raised a dispute on "${order.offer.deliverable}" — respond within ${DISPUTE_RESPONSE_DAYS} days.`,
+      `/orders/${orderId}`
+    );
+    return updated;
+  },
+
+  // The other party's chance to give their side before an admin decides —
+  // not required, but if they never respond that's visible to whoever
+  // resolves it, same as a party going silent on Upwork's dispute flow.
+  async respondToDispute(orderId: string, userId: string, input: RespondToDisputeInput) {
+    const order = await ordersRepository.findById(orderId);
+    if (!order) throw new NotFoundError("Order");
+    if (order.status !== "DISPUTED" || !order.disputedByUserId) {
+      throw new ConflictError("This order doesn't have an open dispute");
+    }
+    if (order.disputedByUserId === userId) {
+      throw new ForbiddenError("You raised this dispute — the other side needs to respond, not you");
+    }
+    const isDeveloper = order.offer.developer.userId === userId;
+    const isCreator = order.offer.creator.userId === userId;
+    if (!isDeveloper && !isCreator) {
+      throw new ForbiddenError("Only the developer or creator on this order can respond to a dispute");
+    }
+
+    const updated = await ordersRepository.update(orderId, {
+      disputeResponse: input.response,
+      disputeRespondedAt: new Date()
+    });
+    notificationsService.notify(
+      order.disputedByUserId,
+      "ORDER_UPDATE",
+      `The other side responded to your dispute on "${order.offer.deliverable}".`,
+      `/orders/${orderId}`
+    );
+    return updated;
+  },
+
+  // The admin-facing counterpart to adminRefund below: adminRefund decides
+  // the developer keeps their money, this decides the creator gets paid
+  // anyway. Before this existed there was literally no way to resolve a
+  // dispute in the creator's favor short of an admin manually flipping
+  // database rows.
+  async adminReleaseDisputed(orderId: string) {
+    const order = await ordersRepository.findById(orderId);
+    if (!order) throw new NotFoundError("Order");
+    if (order.status !== "DISPUTED") {
+      throw new ConflictError(`Cannot release an order in status ${order.status} — only a disputed order can be resolved this way`);
+    }
+    const updated = await payoutToCreator(order);
+    const message = `An admin resolved the dispute on "${order.offer.deliverable}" — payment was released.`;
+    notificationsService.notify(order.offer.creator.userId, "ORDER_UPDATE", message, `/orders/${orderId}`);
+    notificationsService.notify(order.offer.developer.userId, "ORDER_UPDATE", message, `/orders/${orderId}`);
     return updated;
   },
 

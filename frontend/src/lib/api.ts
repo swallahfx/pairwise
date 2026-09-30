@@ -149,9 +149,18 @@ export const api = {
     requestRevision: (id: string) =>
       request<import("@/types").Order>(`/orders/${id}/request-revision`, { method: "POST" }),
     approve: (id: string) => request<import("@/types").Order>(`/orders/${id}/approve`, { method: "POST" }),
+    raiseDispute: (id: string, reason: string) =>
+      request<import("@/types").Order>(`/orders/${id}/dispute`, { method: "POST", body: JSON.stringify({ reason }) }),
+    respondToDispute: (id: string, response: string) =>
+      request<import("@/types").Order>(`/orders/${id}/dispute-response`, {
+        method: "POST",
+        body: JSON.stringify({ response })
+      }),
     adminListAll: () => request<import("@/types").Order[]>("/orders/admin/all"),
     adminDispute: (id: string) => request<import("@/types").Order>(`/orders/admin/${id}/dispute`, { method: "POST" }),
-    adminRefund: (id: string) => request<import("@/types").Order>(`/orders/admin/${id}/refund`, { method: "POST" })
+    adminRefund: (id: string) => request<import("@/types").Order>(`/orders/admin/${id}/refund`, { method: "POST" }),
+    adminReleaseDisputed: (id: string) =>
+      request<import("@/types").Order>(`/orders/admin/${id}/release-disputed`, { method: "POST" })
   },
   payments: {
     listBanks: () => request<{ name: string; code: string; slug: string }[]>("/payments/banks"),

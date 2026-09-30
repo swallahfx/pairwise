@@ -31,6 +31,10 @@ export default function OrderStatusPage() {
     refetchInterval: 5000 // status can change server-side (webhook, auto-approve sweep)
   });
 
+  const [showDisputeForm, setShowDisputeForm] = useState(false);
+  const [disputeReason, setDisputeReason] = useState("");
+  const [respondText, setRespondText] = useState("");
+
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["order", params.id] });
   const startMutation = useMutation({ mutationFn: () => api.orders.start(params.id), onSuccess: invalidate });
   const submitMutation = useMutation({ mutationFn: () => api.orders.submit(params.id), onSuccess: invalidate });
@@ -39,12 +43,33 @@ export default function OrderStatusPage() {
     onSuccess: invalidate
   });
   const approveMutation = useMutation({ mutationFn: () => api.orders.approve(params.id), onSuccess: invalidate });
+  const disputeMutation = useMutation({
+    mutationFn: () => api.orders.raiseDispute(params.id, disputeReason),
+    onSuccess: () => {
+      setShowDisputeForm(false);
+      setDisputeReason("");
+      invalidate();
+    }
+  });
+  const respondMutation = useMutation({
+    mutationFn: () => api.orders.respondToDispute(params.id, respondText),
+    onSuccess: () => {
+      setRespondText("");
+      invalidate();
+    }
+  });
 
   if (isLoading) return <div className="p-14 text-ink-muted">Loading…</div>;
   if (!order) return <div className="p-14 text-ink-muted">Order not found.</div>;
 
   const current = stepIndex(order.status);
-  const isDisputed = order.status === "DISPUTED" || order.status === "REFUNDED";
+  const isDisputed = order.status === "DISPUTED";
+  const isRefunded = order.status === "REFUNDED";
+  const isTerminalDispute = isDisputed || isRefunded;
+  const isParty = user?.userId === order.offer.developer.userId || user?.userId === order.offer.creator.userId;
+  const canRaiseDispute =
+    isParty && ["FUNDED", "IN_PROGRESS", "REVISION_REQUESTED", "SUBMITTED"].includes(order.status);
+  const canRespondToDispute = isDisputed && user?.userId && order.disputedByUserId !== user.userId && isParty && !order.disputeRespondedAt;
   const actionError = (startMutation.error ?? submitMutation.error ?? revisionMutation.error ?? approveMutation.error) as
     | Error
     | undefined;
@@ -73,10 +98,60 @@ export default function OrderStatusPage() {
         </div>
       )}
 
-      {isDisputed ? (
+      {order.disputeReason && (
+        <div className="mt-4 bg-surface border border-border rounded-card p-5 space-y-3">
+          <div>
+            <div className="text-[13px] font-semibold text-ink-muted mb-1.5">
+              Dispute raised by {order.disputedByUserId === order.offer.developer.userId ? order.offer.developer.user.name : order.offer.creator.user.name}
+            </div>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{order.disputeReason}</p>
+          </div>
+          {order.disputeResponse && (
+            <div className="pt-3 border-t border-border">
+              <div className="text-[13px] font-semibold text-ink-muted mb-1.5">Response</div>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{order.disputeResponse}</p>
+            </div>
+          )}
+          {canRespondToDispute && (
+            <form
+              className="pt-3 border-t border-border space-y-2.5"
+              onSubmit={(e) => {
+                e.preventDefault();
+                respondMutation.mutate();
+              }}
+            >
+              <label className="block text-[13px] font-semibold">Give your side of it</label>
+              <textarea
+                className="input"
+                rows={3}
+                value={respondText}
+                onChange={(e) => setRespondText(e.target.value)}
+                required
+                minLength={10}
+              />
+              <button
+                type="submit"
+                disabled={respondMutation.isPending}
+                className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
+              >
+                {respondMutation.isPending ? "Sending…" : "Send response"}
+              </button>
+              {respondMutation.isError && (
+                <p className="text-sm text-red-600">{(respondMutation.error as Error).message}</p>
+              )}
+            </form>
+          )}
+        </div>
+      )}
+
+      {isTerminalDispute ? (
         <div className="mt-10 p-6 bg-surface border border-border rounded-card">
           <div className="text-sm font-semibold">This order is {order.status.toLowerCase()}.</div>
-          <div className="text-sm text-ink-muted mt-1">A human review is needed — this doesn&apos;t auto-resolve.</div>
+          <div className="text-sm text-ink-muted mt-1">
+            {isDisputed
+              ? "A human review is needed — this doesn't auto-resolve."
+              : "An admin reviewed this and refunded the developer."}
+          </div>
         </div>
       ) : (
         <div className="flex items-center mt-10">
@@ -163,6 +238,59 @@ export default function OrderStatusPage() {
 
       {hasRole(user, "DEVELOPER") && order.status === "PAID" && (
         <ReviewForm orderId={order.id} creatorName={order.offer.creator.user.name} />
+      )}
+
+      {canRaiseDispute && (
+        <div className="mt-6 pt-6 border-t border-border">
+          {!showDisputeForm ? (
+            <button
+              onClick={() => setShowDisputeForm(true)}
+              className="text-sm font-semibold text-red-600"
+            >
+              Something wrong? Raise a dispute
+            </button>
+          ) : (
+            <form
+              className="space-y-2.5"
+              onSubmit={(e) => {
+                e.preventDefault();
+                disputeMutation.mutate();
+              }}
+            >
+              <label className="block text-[13px] font-semibold">
+                What's wrong? This pauses auto-release and the other side gets a chance to respond before an
+                admin looks at it.
+              </label>
+              <textarea
+                className="input"
+                rows={3}
+                value={disputeReason}
+                onChange={(e) => setDisputeReason(e.target.value)}
+                required
+                minLength={10}
+              />
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowDisputeForm(false)}
+                  className="text-sm font-semibold text-ink-muted px-4 py-2.5"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={disputeMutation.isPending}
+                  className="bg-red-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
+                >
+                  {disputeMutation.isPending ? "Submitting…" : "Raise dispute"}
+                </button>
+              </div>
+              {disputeMutation.isError && (
+                <p className="text-sm text-red-600">{(disputeMutation.error as Error).message}</p>
+              )}
+            </form>
+          )}
+        </div>
       )}
     </div>
   );

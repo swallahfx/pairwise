@@ -19,6 +19,11 @@ export interface OrderUpdate {
   submittedAt?: Date;
   approvedAt?: Date;
   paidAt?: Date;
+  disputeReason?: string;
+  disputedByUserId?: string;
+  disputedAt?: Date;
+  disputeResponse?: string;
+  disputeRespondedAt?: Date;
 }
 
 const withParties = {

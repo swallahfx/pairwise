@@ -257,6 +257,18 @@ model Order {
   paidAt                DateTime?
   createdAt             DateTime    @default(now())
 
+  // Self-service dispute: either party can raise one (see
+  // ordersService.raiseDispute), which is what actually moves status to
+  // DISPUTED now, not just an admin acting unprompted. disputedByUserId
+  // records who raised it so the other side is the only one who can
+  // respond; the response fields are informational for whoever ends up
+  // resolving it, not something that triggers an automatic outcome.
+  disputeReason      String?
+  disputedByUserId   String?
+  disputedAt         DateTime?
+  disputeResponse    String?
+  disputeRespondedAt DateTime?
+
   review Review?
 }
 

@@ -550,6 +550,10 @@ function OrdersTable() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["admin-orders-all"] });
   const disputeMutation = useMutation({ mutationFn: (id: string) => api.orders.adminDispute(id), onSuccess: invalidate });
   const refundMutation = useMutation({ mutationFn: (id: string) => api.orders.adminRefund(id), onSuccess: invalidate });
+  const releaseMutation = useMutation({
+    mutationFn: (id: string) => api.orders.adminReleaseDisputed(id),
+    onSuccess: invalidate
+  });
 
   return (
     <>
@@ -563,7 +567,7 @@ function OrdersTable() {
                   {o.offer.developer.user.name} → {o.offer.creator.user.name}
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
                 <Money kobo={o.totalKobo} size="text-lg" />
                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${ORDER_STATUS_STYLES[o.status] ?? "bg-accent/10 text-accent"}`}>
                   {o.status}
@@ -577,6 +581,15 @@ function OrdersTable() {
                     Dispute
                   </button>
                 )}
+                {o.status === "DISPUTED" && (
+                  <button
+                    onClick={() => releaseMutation.mutate(o.id)}
+                    disabled={releaseMutation.isPending}
+                    className="text-sm font-semibold text-money px-2.5 py-1.5"
+                  >
+                    Release to creator
+                  </button>
+                )}
                 {(o.status === "DISPUTED" || o.status === "FUNDED") && (
                   <button
                     onClick={() => refundMutation.mutate(o.id)}
@@ -588,10 +601,27 @@ function OrdersTable() {
                 )}
               </div>
             </div>
+            {o.disputeReason && (
+              <div className="mt-2.5 pt-2.5 border-t border-border text-[13px] text-ink-muted space-y-1">
+                <div>
+                  <span className="font-semibold text-ink">
+                    {o.disputedByUserId === o.offer.developer.userId ? o.offer.developer.user.name : o.offer.creator.user.name}:
+                  </span>{" "}
+                  {o.disputeReason}
+                </div>
+                {o.disputeResponse ? (
+                  <div>
+                    <span className="font-semibold text-ink">Response:</span> {o.disputeResponse}
+                  </div>
+                ) : (
+                  o.status === "DISPUTED" && <div className="italic">No response yet.</div>
+                )}
+              </div>
+            )}
           </Row>
         ))}
       </Table>
-      <ErrorLine error={disputeMutation.error ?? refundMutation.error} />
+      <ErrorLine error={disputeMutation.error ?? refundMutation.error ?? releaseMutation.error} />
     </>
   );
 }

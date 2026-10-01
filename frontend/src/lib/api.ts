@@ -56,6 +56,7 @@ export const api = {
         body: JSON.stringify(data)
       }),
     adminListUsers: () => request<import("@/types").AdminUser[]>("/auth/admin/users"),
+    adminDeleteUserPreview: (id: string) => request<import("@/types").DeletePreview>(`/auth/admin/users/${id}/delete-preview`),
     adminDeleteUser: (id: string) => request<void>(`/auth/admin/users/${id}`, { method: "DELETE" })
   },
   creators: {
@@ -83,6 +84,7 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify(data)
       }),
+    adminDeletePreview: (id: string) => request<import("@/types").DeletePreview>(`/creators/admin/${id}/delete-preview`),
     adminDelete: (id: string) => request<void>(`/creators/admin/${id}`, { method: "DELETE" }),
     save: (id: string) => request<void>(`/creators/${id}/save`, { method: "POST" }),
     unsave: (id: string) => request<void>(`/creators/${id}/save`, { method: "DELETE" }),
@@ -103,6 +105,7 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify(data)
       }),
+    adminDeletePreview: (id: string) => request<import("@/types").DeletePreview>(`/products/admin/${id}/delete-preview`),
     adminDelete: (id: string) => request<void>(`/products/admin/${id}`, { method: "DELETE" })
   },
   requests: {
@@ -116,6 +119,7 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify(data)
       }),
+    adminDeletePreview: (id: string) => request<import("@/types").DeletePreview>(`/requests/admin/${id}/delete-preview`),
     adminDelete: (id: string) => request<void>(`/requests/admin/${id}`, { method: "DELETE" })
   },
   offers: {
@@ -196,6 +200,7 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify(data)
       }),
+    adminDeletePreview: (id: string) => request<import("@/types").DeletePreview>(`/brands/admin/${id}/delete-preview`),
     adminDelete: (id: string) => request<void>(`/brands/admin/${id}`, { method: "DELETE" })
   },
   upfront: {
@@ -225,6 +230,8 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify(data)
       }),
+    adminDeleteListingPreview: (id: string) =>
+      request<import("@/types").DeletePreview>(`/upfront/admin/listings/${id}/delete-preview`),
     adminDeleteListing: (id: string) => request<void>(`/upfront/admin/listings/${id}`, { method: "DELETE" }),
     adminListAllPurchases: () => request<import("@/types").UpfrontPurchase[]>("/upfront/admin/purchases"),
     purchases: {

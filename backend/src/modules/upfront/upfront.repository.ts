@@ -110,8 +110,16 @@ export const upfrontRepository = {
     return prisma.upfrontListing.update({ where: { id }, data });
   },
 
-  delete(id: string) {
-    return prisma.upfrontListing.delete({ where: { id } });
+  findPurchasesDetailed(id: string) {
+    return prisma.upfrontPurchase.findMany({ where: { listingId: id } });
+  },
+
+  cascadeDelete(id: string) {
+    return prisma.$transaction(async (tx) => {
+      await tx.upfrontPurchase.deleteMany({ where: { listingId: id } });
+      await tx.question.deleteMany({ where: { listingId: id } });
+      return tx.upfrontListing.delete({ where: { id } });
+    });
   },
 
   incrementSlotsSold(id: string) {

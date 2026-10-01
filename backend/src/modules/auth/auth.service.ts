@@ -4,6 +4,7 @@ import { OAuth2Client } from "google-auth-library";
 import { prisma } from "../../config/db";
 import { env } from "../../config/env";
 import { ConflictError, NotFoundError, UnauthorizedError } from "../../common/errors";
+import { BlockedItem, blockedDeleteMessage, describeBlockedOrder, describeBlockedPurchase, orderIsFinancial, purchaseIsFinancial } from "../../common/financialGuard";
 import { AdminCreateUserInput, GoogleAuthInput, LoginInput, RegisterInput } from "./auth.schema";
 
 const googleClient = new OAuth2Client(env.googleClientId);
@@ -204,15 +205,80 @@ export const authService = {
     });
   },
 
-  // Every profile relation is ON DELETE RESTRICT, so Prisma won't even let
-  // a user with an empty, freshly-created profile be deleted until that
-  // profile row is gone too — and the profile itself is RESTRICT-guarded by
-  // its own children (rate cards, offers, listings, products...). Rather
-  // than blindly cascading through that whole graph (which could silently
-  // wipe out real orders/offers), this only ever removes a user that has
-  // zero downstream activity: it deletes the one profile row itself, then
-  // the user, and refuses with a specific reason the moment anything real
-  // is attached — the admin has to clean that up in its own domain first.
+  // What deleting this account would actually touch, across whichever
+  // profiles it holds (an admin account can hold all three at once — see
+  // adminProfileBundle). Anything with real money attached (an order or
+  // Upfront purchase past AGREED) blocks the whole delete and is itemized
+  // here; everything else is reported as what cascade would remove.
+  async deletePreview(id: string) {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: { creatorProfile: true, developerProfile: true, brandProfile: true }
+    });
+    if (!user) throw new NotFoundError("User");
+
+    const blocked: BlockedItem[] = [];
+    const cascade: string[] = [];
+
+    function splitListings(listings: { title: string; purchases: { id: string; status: string; totalKobo: number }[] }[]): number {
+      let safe = 0;
+      for (const listing of listings) {
+        const financial = listing.purchases.filter((p) => purchaseIsFinancial(p.status));
+        if (financial.length > 0) financial.forEach((p) => blocked.push(describeBlockedPurchase(p, listing.title)));
+        else safe += 1;
+      }
+      return safe;
+    }
+
+    if (user.creatorProfile) {
+      const cp = user.creatorProfile;
+      const [offers, listings, rateCardItemCount] = await Promise.all([
+        prisma.offer.findMany({ where: { creatorId: cp.id }, include: { order: true } }),
+        prisma.upfrontListing.findMany({ where: { creatorId: cp.id }, include: { purchases: true } }),
+        prisma.rateCardItem.count({ where: { creatorId: cp.id } })
+      ]);
+      const financialOffers = offers.filter((o) => o.order && orderIsFinancial(o.order.status));
+      financialOffers.forEach((o) => blocked.push(describeBlockedOrder(o.order!)));
+      const safeOffers = offers.length - financialOffers.length;
+      if (safeOffers > 0) cascade.push(`${safeOffers} creator offer(s) with no money moved yet`);
+      if (rateCardItemCount > 0) cascade.push(`${rateCardItemCount} rate card item(s)`);
+      const safeListings = splitListings(listings);
+      if (safeListings > 0) cascade.push(`${safeListings} Upfront listing(s) as creator`);
+    }
+
+    if (user.developerProfile) {
+      const dp = user.developerProfile;
+      const [offers, productCount, requestCount] = await Promise.all([
+        prisma.offer.findMany({ where: { developerId: dp.id }, include: { order: true } }),
+        prisma.product.count({ where: { developerId: dp.id } }),
+        prisma.advertRequest.count({ where: { developerId: dp.id } })
+      ]);
+      const financialOffers = offers.filter((o) => o.order && orderIsFinancial(o.order.status));
+      financialOffers.forEach((o) => blocked.push(describeBlockedOrder(o.order!)));
+      const safeOffers = offers.length - financialOffers.length;
+      if (safeOffers > 0) cascade.push(`${safeOffers} developer offer(s) with no money moved yet`);
+      if (productCount > 0) cascade.push(`${productCount} product(s)`);
+      if (requestCount > 0) cascade.push(`${requestCount} request(s)`);
+    }
+
+    if (user.brandProfile) {
+      const listings = await prisma.upfrontListing.findMany({
+        where: { brandId: user.brandProfile.id },
+        include: { purchases: true }
+      });
+      const safeListings = splitListings(listings);
+      if (safeListings > 0) cascade.push(`${safeListings} Upfront listing(s) as brand`);
+    }
+
+    const myPurchases = await prisma.upfrontPurchase.findMany({ where: { buyerId: id } });
+    const financialPurchases = myPurchases.filter((p) => purchaseIsFinancial(p.status));
+    financialPurchases.forEach((p) => blocked.push(describeBlockedPurchase(p, "a listing")));
+    const safePurchases = myPurchases.length - financialPurchases.length;
+    if (safePurchases > 0) cascade.push(`${safePurchases} Upfront purchase(s) as buyer, with no money moved yet`);
+
+    return { cascade, blocked, label: `account ${user.email}` };
+  },
+
   async adminDeleteUser(id: string, requestingAdminId: string) {
     if (id === requestingAdminId) {
       throw new ConflictError("You cannot delete your own admin account");
@@ -224,62 +290,60 @@ export const authService = {
     });
     if (!user) throw new NotFoundError("User");
 
-    const purchaseCount = await prisma.upfrontPurchase.count({ where: { buyerId: id } });
-    if (purchaseCount > 0) {
-      throw new ConflictError("This account has Upfront purchase history and can't be deleted");
-    }
-
-    if (user.creatorProfile) {
-      const cp = user.creatorProfile;
-      const [offers, listings, reviews, rateCardItems] = await Promise.all([
-        prisma.offer.count({ where: { creatorId: cp.id } }),
-        prisma.upfrontListing.count({ where: { creatorId: cp.id } }),
-        prisma.review.count({ where: { creatorId: cp.id } }),
-        prisma.rateCardItem.count({ where: { creatorId: cp.id } })
-      ]);
-      if (offers > 0 || listings > 0 || reviews > 0 || rateCardItems > 0) {
-        throw new ConflictError(
-          "This creator has rate cards, offers, Upfront listings, or reviews — remove those first"
-        );
-      }
-    }
-    if (user.developerProfile) {
-      const dp = user.developerProfile;
-      const [products, requests, offers, reviewsGiven] = await Promise.all([
-        prisma.product.count({ where: { developerId: dp.id } }),
-        prisma.advertRequest.count({ where: { developerId: dp.id } }),
-        prisma.offer.count({ where: { developerId: dp.id } }),
-        prisma.review.count({ where: { developerId: dp.id } })
-      ]);
-      if (products > 0 || requests > 0 || offers > 0 || reviewsGiven > 0) {
-        throw new ConflictError("This developer has products, requests, offers, or reviews — remove those first");
-      }
-    }
-    if (user.brandProfile) {
-      const listings = await prisma.upfrontListing.count({ where: { brandId: user.brandProfile.id } });
-      if (listings > 0) {
-        throw new ConflictError("This brand has Upfront listings — remove those first");
-      }
-    }
-    const upfrontReviewsLeft = await prisma.upfrontReview.count({ where: { buyerId: id } });
-    if (upfrontReviewsLeft > 0) {
-      throw new ConflictError("This account has left Upfront reviews and can't be deleted");
-    }
+    const { blocked } = await authService.deletePreview(id);
+    if (blocked.length > 0) throw new ConflictError(blockedDeleteMessage(blocked));
 
     await prisma.$transaction(async (tx) => {
       // Purely-personal, low-stakes rows get cleaned up rather than
       // blocking the delete on them — a bookmark, a notification, or a
-      // question this account asked isn't the kind of activity history
-      // the checks above are protecting.
+      // question this account asked isn't the kind of activity the
+      // financial check above is protecting.
       await tx.savedCreator.deleteMany({ where: { userId: id } });
       await tx.notification.deleteMany({ where: { userId: id } });
       await tx.question.deleteMany({ where: { askerId: id } });
+      // Every purchase left at this point is AGREED (deletePreview already
+      // blocked on anything past it), so this is a no-money abandoned cart.
+      await tx.upfrontPurchase.deleteMany({ where: { buyerId: id } });
+
       if (user.creatorProfile) {
-        await tx.savedCreator.deleteMany({ where: { creatorId: user.creatorProfile.id } });
-        await tx.creatorProfile.delete({ where: { id: user.creatorProfile.id } });
+        const cp = user.creatorProfile;
+        const [offers, listings] = await Promise.all([
+          tx.offer.findMany({ where: { creatorId: cp.id }, select: { id: true } }),
+          tx.upfrontListing.findMany({ where: { creatorId: cp.id }, select: { id: true } })
+        ]);
+        const offerIds = offers.map((o) => o.id);
+        const listingIds = listings.map((l) => l.id);
+        await tx.order.deleteMany({ where: { offerId: { in: offerIds } } });
+        await tx.offer.deleteMany({ where: { creatorId: cp.id } });
+        await tx.rateCardItem.deleteMany({ where: { creatorId: cp.id } });
+        await tx.upfrontPurchase.deleteMany({ where: { listingId: { in: listingIds } } });
+        await tx.question.deleteMany({ where: { listingId: { in: listingIds } } });
+        await tx.upfrontListing.deleteMany({ where: { creatorId: cp.id } });
+        await tx.savedCreator.deleteMany({ where: { creatorId: cp.id } });
+        await tx.creatorProfile.delete({ where: { id: cp.id } });
       }
-      if (user.developerProfile) await tx.developerProfile.delete({ where: { id: user.developerProfile.id } });
-      if (user.brandProfile) await tx.brandProfile.delete({ where: { id: user.brandProfile.id } });
+
+      if (user.developerProfile) {
+        const dp = user.developerProfile;
+        const offers = await tx.offer.findMany({ where: { developerId: dp.id }, select: { id: true } });
+        const offerIds = offers.map((o) => o.id);
+        await tx.order.deleteMany({ where: { offerId: { in: offerIds } } });
+        await tx.offer.deleteMany({ where: { developerId: dp.id } });
+        await tx.advertRequest.deleteMany({ where: { developerId: dp.id } });
+        await tx.product.deleteMany({ where: { developerId: dp.id } });
+        await tx.developerProfile.delete({ where: { id: dp.id } });
+      }
+
+      if (user.brandProfile) {
+        const bp = user.brandProfile;
+        const listings = await tx.upfrontListing.findMany({ where: { brandId: bp.id }, select: { id: true } });
+        const listingIds = listings.map((l) => l.id);
+        await tx.upfrontPurchase.deleteMany({ where: { listingId: { in: listingIds } } });
+        await tx.question.deleteMany({ where: { listingId: { in: listingIds } } });
+        await tx.upfrontListing.deleteMany({ where: { brandId: bp.id } });
+        await tx.brandProfile.delete({ where: { id: bp.id } });
+      }
+
       await tx.user.delete({ where: { id } });
     });
   }

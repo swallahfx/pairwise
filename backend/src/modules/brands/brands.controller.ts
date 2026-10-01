@@ -22,6 +22,11 @@ export const brandsController = {
     res.json(brand);
   },
 
+  async adminDeletePreview(req: Request, res: Response) {
+    const preview = await brandsService.deletePreview(req.params.id);
+    res.json(preview);
+  },
+
   async adminDelete(req: Request, res: Response) {
     await brandsService.adminDelete(req.params.id);
     res.status(204).send();

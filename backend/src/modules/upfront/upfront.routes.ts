@@ -70,6 +70,12 @@ upfrontRouter.patch(
   validate(adminUpdateListingSchema),
   asyncHandler(upfrontController.adminUpdateListing)
 );
+upfrontRouter.get(
+  "/admin/listings/:id/delete-preview",
+  requireAuth,
+  requireRole("ADMIN"),
+  asyncHandler(upfrontController.adminDeleteListingPreview)
+);
 upfrontRouter.delete(
   "/admin/listings/:id",
   requireAuth,

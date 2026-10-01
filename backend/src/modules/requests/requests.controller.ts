@@ -20,6 +20,10 @@ export const requestsController = {
     const request = await requestsService.adminUpdate(req.params.id, req.body);
     res.json(request);
   },
+  async adminDeletePreview(req: Request, res: Response) {
+    const preview = await requestsService.deletePreview(req.params.id);
+    res.json(preview);
+  },
   async adminDelete(req: Request, res: Response) {
     await requestsService.adminDelete(req.params.id);
     res.status(204).send();

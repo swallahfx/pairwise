@@ -22,6 +22,12 @@ productsRouter.patch(
   validate(adminUpdateProductSchema),
   asyncHandler(productsController.adminUpdate)
 );
+productsRouter.get(
+  "/admin/:id/delete-preview",
+  requireAuth,
+  requireRole("ADMIN"),
+  asyncHandler(productsController.adminDeletePreview)
+);
 productsRouter.delete(
   "/admin/:id",
   requireAuth,

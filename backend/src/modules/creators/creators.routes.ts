@@ -47,6 +47,12 @@ creatorsRouter.patch(
   validate(adminUpdateCreatorSchema),
   asyncHandler(creatorsController.adminUpdate)
 );
+creatorsRouter.get(
+  "/admin/:id/delete-preview",
+  requireAuth,
+  requireRole("ADMIN"),
+  asyncHandler(creatorsController.adminDeletePreview)
+);
 creatorsRouter.delete(
   "/admin/:id",
   requireAuth,

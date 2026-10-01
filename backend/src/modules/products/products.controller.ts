@@ -20,6 +20,10 @@ export const productsController = {
     const product = await productsService.adminUpdate(req.params.id, req.body);
     res.json(product);
   },
+  async adminDeletePreview(req: Request, res: Response) {
+    const preview = await productsService.deletePreview(req.params.id);
+    res.json(preview);
+  },
   async adminDelete(req: Request, res: Response) {
     await productsService.adminDelete(req.params.id);
     res.status(204).send();

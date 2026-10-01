@@ -1,4 +1,5 @@
 import { ConflictError, NotFoundError } from "../../common/errors";
+import { BlockedItem, blockedDeleteMessage, describeBlockedPurchase, purchaseIsFinancial } from "../../common/financialGuard";
 import { brandsRepository } from "./brands.repository";
 import { AdminUpdateBrandInput, UpdateBrandProfileInput } from "./brands.schema";
 
@@ -28,13 +29,33 @@ export const brandsService = {
     return brandsRepository.adminUpdate(id, input);
   },
 
+  async deletePreview(id: string) {
+    const brand = await brandsRepository.findById(id);
+    if (!brand) throw new NotFoundError("Brand profile");
+    const listings = await brandsRepository.findListingsDetailed(id);
+
+    const blocked: BlockedItem[] = [];
+    let safeListingCount = 0;
+    for (const listing of listings) {
+      const financialPurchases = listing.purchases.filter((p) => purchaseIsFinancial(p.status));
+      if (financialPurchases.length > 0) {
+        financialPurchases.forEach((p) => blocked.push(describeBlockedPurchase(p, listing.title)));
+      } else {
+        safeListingCount += 1;
+      }
+    }
+
+    const cascade: string[] = [];
+    if (safeListingCount > 0) cascade.push(`${safeListingCount} Upfront listing(s)`);
+
+    return { cascade, blocked, label: `brand ${brand.companyName}` };
+  },
+
   async adminDelete(id: string) {
     const brand = await brandsRepository.findById(id);
     if (!brand) throw new NotFoundError("Brand profile");
-    const listings = await brandsRepository.countListings(id);
-    if (listings > 0) {
-      throw new ConflictError("This brand has Upfront listings — remove those first");
-    }
-    return brandsRepository.delete(id);
+    const { blocked } = await brandsService.deletePreview(id);
+    if (blocked.length > 0) throw new ConflictError(blockedDeleteMessage(blocked));
+    return brandsRepository.cascadeDelete(id);
   }
 };

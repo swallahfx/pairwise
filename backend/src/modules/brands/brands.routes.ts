@@ -24,4 +24,10 @@ brandsRouter.patch(
   validate(adminUpdateBrandSchema),
   asyncHandler(brandsController.adminUpdate)
 );
+brandsRouter.get(
+  "/admin/:id/delete-preview",
+  requireAuth,
+  requireRole("ADMIN"),
+  asyncHandler(brandsController.adminDeletePreview)
+);
 brandsRouter.delete("/admin/:id", requireAuth, requireRole("ADMIN"), asyncHandler(brandsController.adminDelete));

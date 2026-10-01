@@ -27,6 +27,11 @@ export const authController = {
     res.json(users);
   },
 
+  async adminDeleteUserPreview(req: Request, res: Response) {
+    const preview = await authService.deletePreview(req.params.id);
+    res.json(preview);
+  },
+
   async adminDeleteUser(req: Request, res: Response) {
     await authService.adminDeleteUser(req.params.id, req.auth!.userId);
     res.status(204).send();

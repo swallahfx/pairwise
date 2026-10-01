@@ -43,6 +43,11 @@ export const creatorsController = {
     res.json(creator);
   },
 
+  async adminDeletePreview(req: Request, res: Response) {
+    const preview = await creatorsService.deletePreview(req.params.id);
+    res.json(preview);
+  },
+
   async adminDelete(req: Request, res: Response) {
     await creatorsService.adminDelete(req.params.id);
     res.status(204).send();

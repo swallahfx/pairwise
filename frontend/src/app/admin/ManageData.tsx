@@ -39,9 +39,12 @@ export function ManageData() {
   return (
     <div>
       <p className="text-ink-muted mb-5">
-        Direct edit/delete access to every record on the platform. Financial records (orders, Upfront
-        purchases) can't be deleted outright — mark them disputed or refunded instead, which just records
-        the outcome; it doesn't reverse a Paystack transfer that's already gone out.
+        Direct edit/delete access to every record on the platform. Deleting a creator, brand, product,
+        request, or Upfront listing cascades through everything attached to it — you'll see exactly what
+        before confirming. The one thing that still blocks a delete outright is real money: an order or
+        Upfront purchase that's gone past AGREED. Orders and Upfront purchases themselves can't be deleted
+        at all — mark them disputed or refunded instead, which just records the outcome; it doesn't reverse
+        a Paystack transfer that's already gone out.
       </p>
       <div className="flex gap-1.5 mb-6 flex-wrap">
         {ENTITIES.map((e) => (
@@ -88,16 +91,45 @@ function Table({ children, empty, isLoading }: { children: React.ReactNode; empt
   );
 }
 
-function DeleteButton({ onDelete, isPending, confirmText }: { onDelete: () => void; isPending: boolean; confirmText: string }) {
+// Fetches a preview before doing anything destructive: if real money is
+// attached (any order/Upfront purchase past AGREED), that's shown as the
+// specific reason deletion is blocked — no silent partial delete. Otherwise
+// the admin sees exactly what cascades away (rate cards, offers, listings,
+// the account itself...) before confirming.
+function DeleteButton({
+  onDelete,
+  isPending,
+  preview
+}: {
+  onDelete: () => void;
+  isPending: boolean;
+  preview: () => Promise<import("@/types").DeletePreview>;
+}) {
+  const [isChecking, setIsChecking] = useState(false);
   return (
     <button
-      onClick={() => {
-        if (window.confirm(confirmText)) onDelete();
+      onClick={async () => {
+        setIsChecking(true);
+        try {
+          const { cascade, blocked, label } = await preview();
+          if (blocked.length > 0) {
+            window.alert(
+              `Can't delete ${label} — real money is attached:\n\n${blocked
+                .map((b) => `• ${b.detail}`)
+                .join("\n")}\n\nResolve those first (let them pay out, or mark disputed/refunded).`
+            );
+            return;
+          }
+          const cascadeText = cascade.length > 0 ? `This will also delete:\n${cascade.map((c) => `• ${c}`).join("\n")}\n\n` : "";
+          if (window.confirm(`Delete ${label}?\n\n${cascadeText}This can't be undone.`)) onDelete();
+        } finally {
+          setIsChecking(false);
+        }
       }}
-      disabled={isPending}
+      disabled={isPending || isChecking}
       className="text-sm font-semibold text-red-600 px-3 py-1.5 disabled:opacity-50"
     >
-      Delete
+      {isChecking ? "Checking…" : "Delete"}
     </button>
   );
 }
@@ -129,7 +161,7 @@ function UsersTable() {
               <DeleteButton
                 onDelete={() => deleteMutation.mutate(u.id)}
                 isPending={deleteMutation.isPending}
-                confirmText={`Delete the account for ${u.email}? This can't be undone.`}
+                preview={() => api.auth.adminDeleteUserPreview(u.id)}
               />
             </div>
           </Row>
@@ -229,7 +261,7 @@ function CreatorsTable() {
                   <DeleteButton
                     onDelete={() => deleteMutation.mutate(c.id)}
                     isPending={deleteMutation.isPending}
-                    confirmText={`Delete creator ${c.handle} and their account? This can't be undone.`}
+                    preview={() => api.creators.adminDeletePreview(c.id)}
                   />
                 </div>
               </div>
@@ -304,7 +336,7 @@ function BrandsTable() {
                   <DeleteButton
                     onDelete={() => deleteMutation.mutate(b.id)}
                     isPending={deleteMutation.isPending}
-                    confirmText={`Delete brand ${b.companyName} and their account? This can't be undone.`}
+                    preview={() => api.brands.adminDeletePreview(b.id)}
                   />
                 </div>
               </div>
@@ -379,7 +411,7 @@ function ProductsTable() {
                   <DeleteButton
                     onDelete={() => deleteMutation.mutate(p.id)}
                     isPending={deleteMutation.isPending}
-                    confirmText={`Delete product ${p.name}? This can't be undone.`}
+                    preview={() => api.products.adminDeletePreview(p.id)}
                   />
                 </div>
               </div>
@@ -426,7 +458,7 @@ function RequestsTable() {
                 <DeleteButton
                   onDelete={() => deleteMutation.mutate(r.id)}
                   isPending={deleteMutation.isPending}
-                  confirmText="Delete this request? This can't be undone."
+                  preview={() => api.requests.adminDeletePreview(r.id)}
                 />
               </div>
             </div>
@@ -524,7 +556,7 @@ function UpfrontListingsTable() {
                     <DeleteButton
                       onDelete={() => deleteMutation.mutate(l.id)}
                       isPending={deleteMutation.isPending}
-                      confirmText={`Delete listing "${l.title}"? This can't be undone.`}
+                      preview={() => api.upfront.adminDeleteListingPreview(l.id)}
                     />
                   </div>
                 </div>

@@ -18,6 +18,12 @@ authRouter.post(
   asyncHandler(authController.adminCreateUser)
 );
 authRouter.get("/admin/users", requireAuth, requireRole("ADMIN"), asyncHandler(authController.adminListUsers));
+authRouter.get(
+  "/admin/users/:id/delete-preview",
+  requireAuth,
+  requireRole("ADMIN"),
+  asyncHandler(authController.adminDeleteUserPreview)
+);
 authRouter.delete(
   "/admin/users/:id",
   requireAuth,

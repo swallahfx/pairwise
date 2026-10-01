@@ -1,4 +1,5 @@
 import { ConflictError, NotFoundError } from "../../common/errors";
+import { BlockedItem, blockedDeleteMessage, describeBlockedOrder, describeBlockedPurchase, orderIsFinancial, purchaseIsFinancial } from "../../common/financialGuard";
 import { AuthPayload } from "../../middleware/auth";
 import { notificationsService } from "../notifications/notifications.service";
 import { qaRepository } from "../qa/qa.repository";
@@ -156,16 +157,45 @@ export const creatorsService = {
     return creatorsRepository.adminUpdate(id, input);
   },
 
+  // What a cascade delete would actually do, worked out ahead of time so the
+  // admin sees it before committing to anything: everything safe to wipe
+  // (rate cards, non-financial offers/listings...), and — separately —
+  // anything with real money attached, which blocks the whole delete rather
+  // than being silently skipped.
+  async deletePreview(id: string) {
+    const creator = await creatorsRepository.findById(id);
+    if (!creator) throw new NotFoundError("Creator profile");
+    const [offers, listings, rateCardItemCount] = await creatorsRepository.findDependentsDetailed(id);
+
+    const blocked: BlockedItem[] = [];
+    const cascade: string[] = [];
+
+    const financialOffers = offers.filter((o) => o.order && orderIsFinancial(o.order.status));
+    financialOffers.forEach((o) => blocked.push(describeBlockedOrder(o.order!)));
+    const safeOffers = offers.length - financialOffers.length;
+    if (safeOffers > 0) cascade.push(`${safeOffers} offer(s) with no money moved yet`);
+    if (rateCardItemCount > 0) cascade.push(`${rateCardItemCount} rate card item(s)`);
+
+    let safeListingCount = 0;
+    for (const listing of listings) {
+      const financialPurchases = listing.purchases.filter((p) => purchaseIsFinancial(p.status));
+      if (financialPurchases.length > 0) {
+        financialPurchases.forEach((p) => blocked.push(describeBlockedPurchase(p, listing.title)));
+      } else {
+        safeListingCount += 1;
+      }
+    }
+    if (safeListingCount > 0) cascade.push(`${safeListingCount} Upfront listing(s)`);
+
+    return { cascade, blocked, label: `creator ${creator.handle} (${creator.user.name})` };
+  },
+
   async adminDelete(id: string) {
     const creator = await creatorsRepository.findById(id);
     if (!creator) throw new NotFoundError("Creator profile");
-    const [offers, listings, reviews, rateCardItems] = await creatorsRepository.countDependents(id);
-    if (offers > 0 || listings > 0 || reviews > 0 || rateCardItems > 0) {
-      throw new ConflictError(
-        "This creator has rate cards, offers, Upfront listings, or reviews — remove those first"
-      );
-    }
-    return creatorsRepository.delete(id);
+    const { blocked } = await creatorsService.deletePreview(id);
+    if (blocked.length > 0) throw new ConflictError(blockedDeleteMessage(blocked));
+    return creatorsRepository.cascadeDelete(id);
   },
 
   async saveCreator(userId: string, creatorId: string) {

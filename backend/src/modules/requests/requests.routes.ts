@@ -23,6 +23,12 @@ requestsRouter.patch(
   validate(adminUpdateRequestSchema),
   asyncHandler(requestsController.adminUpdate)
 );
+requestsRouter.get(
+  "/admin/:id/delete-preview",
+  requireAuth,
+  requireRole("ADMIN"),
+  asyncHandler(requestsController.adminDeletePreview)
+);
 requestsRouter.delete(
   "/admin/:id",
   requireAuth,

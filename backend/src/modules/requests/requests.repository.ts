@@ -38,10 +38,16 @@ export const requestsRepository = {
   update(id: string, data: Partial<NewRequestData>) {
     return prisma.advertRequest.update({ where: { id }, data });
   },
-  delete(id: string) {
-    return prisma.advertRequest.delete({ where: { id } });
+  findOffersDetailed(id: string) {
+    return prisma.offer.findMany({ where: { requestId: id }, include: { order: true } });
   },
-  countOffers(id: string) {
-    return prisma.offer.count({ where: { requestId: id } });
+  async cascadeDelete(id: string) {
+    const offers = await prisma.offer.findMany({ where: { requestId: id }, select: { id: true } });
+    const offerIds = offers.map((o) => o.id);
+    return prisma.$transaction(async (tx) => {
+      await tx.order.deleteMany({ where: { offerId: { in: offerIds } } });
+      await tx.offer.deleteMany({ where: { requestId: id } });
+      return tx.advertRequest.delete({ where: { id } });
+    });
   }
 };

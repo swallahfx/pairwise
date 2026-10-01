@@ -91,6 +91,11 @@ export const upfrontController = {
     res.json(listing);
   },
 
+  async adminDeleteListingPreview(req: Request, res: Response) {
+    const preview = await upfrontService.deleteListingPreview(req.params.id);
+    res.json(preview);
+  },
+
   async adminDeleteListing(req: Request, res: Response) {
     await upfrontService.adminDeleteListing(req.params.id);
     res.status(204).send();

@@ -285,3 +285,12 @@ export interface AnalyticsSummary {
   revenueByDay: { date: string; gmvKobo: number }[];
   topCreatorsByEarnings: { name: string; handle: string; earningsKobo: number }[];
 }
+
+// What an admin cascade-delete would actually do: `cascade` lists what gets
+// wiped along with the record, `blocked` lists real money that stops the
+// delete outright (anything beyond an AGREED order/Upfront purchase).
+export interface DeletePreview {
+  cascade: string[];
+  blocked: { type: "order" | "upfrontPurchase"; id: string; detail: string }[];
+  label: string;
+}

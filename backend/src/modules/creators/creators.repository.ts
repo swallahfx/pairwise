@@ -71,22 +71,42 @@ export const creatorsRepository = {
     return prisma.creatorProfile.update({ where: { id }, data });
   },
 
-  countDependents(id: string) {
+  // Everything a cascade delete needs to decide, in one shot: every offer
+  // this creator holds (with its order, if any — the thing that can
+  // actually be financial), and every Upfront listing they've put up (with
+  // its purchases — same reasoning, one level down).
+  findDependentsDetailed(id: string) {
     return Promise.all([
-      prisma.offer.count({ where: { creatorId: id } }),
-      prisma.upfrontListing.count({ where: { creatorId: id } }),
-      prisma.review.count({ where: { creatorId: id } }),
+      prisma.offer.findMany({ where: { creatorId: id }, include: { order: true } }),
+      prisma.upfrontListing.findMany({ where: { creatorId: id }, include: { purchases: true } }),
       prisma.rateCardItem.count({ where: { creatorId: id } })
     ]);
   },
 
-  async delete(id: string) {
+  // Called only once the service has confirmed nothing financial is
+  // attached (every order/purchase found is still AGREED, i.e. no money has
+  // moved) — this wipes the whole graph in FK-safe order, then the profile
+  // and the account itself.
+  async cascadeDelete(id: string) {
     const creator = await prisma.creatorProfile.findUnique({ where: { id } });
     if (!creator) return null;
+    const [offers, listings] = await Promise.all([
+      prisma.offer.findMany({ where: { creatorId: id }, select: { id: true } }),
+      prisma.upfrontListing.findMany({ where: { creatorId: id }, select: { id: true } })
+    ]);
+    const offerIds = offers.map((o) => o.id);
+    const listingIds = listings.map((l) => l.id);
+
     return prisma.$transaction(async (tx) => {
+      await tx.order.deleteMany({ where: { offerId: { in: offerIds } } });
+      await tx.offer.deleteMany({ where: { creatorId: id } });
+      await tx.rateCardItem.deleteMany({ where: { creatorId: id } });
+      await tx.upfrontPurchase.deleteMany({ where: { listingId: { in: listingIds } } });
+      await tx.question.deleteMany({ where: { listingId: { in: listingIds } } });
+      await tx.upfrontListing.deleteMany({ where: { creatorId: id } });
+      await tx.question.deleteMany({ where: { OR: [{ creatorId: id }, { askerId: creator.userId }] } });
       await tx.savedCreator.deleteMany({ where: { OR: [{ creatorId: id }, { userId: creator.userId }] } });
       await tx.notification.deleteMany({ where: { userId: creator.userId } });
-      await tx.question.deleteMany({ where: { askerId: creator.userId } });
       await tx.creatorProfile.delete({ where: { id } });
       return tx.user.delete({ where: { id: creator.userId } });
     });

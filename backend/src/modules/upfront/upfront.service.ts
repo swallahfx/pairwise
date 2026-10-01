@@ -1,4 +1,5 @@
 import { ConflictError, ForbiddenError, NotFoundError } from "../../common/errors";
+import { BlockedItem, blockedDeleteMessage, describeBlockedPurchase, purchaseIsFinancial } from "../../common/financialGuard";
 import { prisma } from "../../config/db";
 import { env } from "../../config/env";
 import { notificationsService } from "../notifications/notifications.service";
@@ -132,13 +133,28 @@ export const upfrontService = {
     return upfrontRepository.adminUpdate(id, input);
   },
 
+  async deleteListingPreview(id: string) {
+    const listing = await upfrontRepository.findById(id);
+    if (!listing) throw new NotFoundError("Listing");
+    const purchases = await upfrontRepository.findPurchasesDetailed(id);
+
+    const blocked: BlockedItem[] = [];
+    const financialPurchases = purchases.filter((p) => purchaseIsFinancial(p.status));
+    financialPurchases.forEach((p) => blocked.push(describeBlockedPurchase(p, listing.title)));
+
+    const cascade: string[] = [];
+    const safePurchases = purchases.length - financialPurchases.length;
+    if (safePurchases > 0) cascade.push(`${safePurchases} slot purchase(s) with no money moved yet`);
+
+    return { cascade, blocked, label: `listing "${listing.title}"` };
+  },
+
   async adminDeleteListing(id: string) {
     const listing = await upfrontRepository.findById(id);
     if (!listing) throw new NotFoundError("Listing");
-    if (listing.slotsSold > 0) {
-      throw new ConflictError("This listing has sold slots and can't be deleted");
-    }
-    return upfrontRepository.delete(id);
+    const { blocked } = await upfrontService.deleteListingPreview(id);
+    if (blocked.length > 0) throw new ConflictError(blockedDeleteMessage(blocked));
+    return upfrontRepository.cascadeDelete(id);
   },
 
   async buySlot(listingId: string, buyerUserId: string) {

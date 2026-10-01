@@ -33,14 +33,20 @@ export const brandsRepository = {
     return prisma.brandProfile.update({ where: { id }, data });
   },
 
-  countListings(id: string) {
-    return prisma.upfrontListing.count({ where: { brandId: id } });
+  findListingsDetailed(id: string) {
+    return prisma.upfrontListing.findMany({ where: { brandId: id }, include: { purchases: true } });
   },
 
-  async delete(id: string) {
+  async cascadeDelete(id: string) {
     const brand = await prisma.brandProfile.findUnique({ where: { id } });
     if (!brand) return null;
+    const listings = await prisma.upfrontListing.findMany({ where: { brandId: id }, select: { id: true } });
+    const listingIds = listings.map((l) => l.id);
+
     return prisma.$transaction(async (tx) => {
+      await tx.upfrontPurchase.deleteMany({ where: { listingId: { in: listingIds } } });
+      await tx.question.deleteMany({ where: { listingId: { in: listingIds } } });
+      await tx.upfrontListing.deleteMany({ where: { brandId: id } });
       await tx.notification.deleteMany({ where: { userId: brand.userId } });
       await tx.question.deleteMany({ where: { askerId: brand.userId } });
       await tx.savedCreator.deleteMany({ where: { userId: brand.userId } });

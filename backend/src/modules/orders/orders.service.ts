@@ -3,7 +3,7 @@ import { env } from "../../config/env";
 import { notificationsService } from "../notifications/notifications.service";
 import { paymentsService } from "../payments/payments.service";
 import { ordersRepository } from "./orders.repository";
-import { RaiseDisputeInput, RespondToDisputeInput } from "./orders.schema";
+import { RaiseDisputeInput, RespondToDisputeInput, SubmitOrderInput } from "./orders.schema";
 
 const AUTO_APPROVE_DAYS = 7;
 
@@ -161,14 +161,18 @@ export const ordersService = {
     return ordersRepository.update(orderId, { status: "IN_PROGRESS" });
   },
 
-  async submit(orderId: string, userId: string) {
+  async submit(orderId: string, userId: string, input: SubmitOrderInput) {
     const order = await ordersRepository.findById(orderId);
     if (!order) throw new NotFoundError("Order");
     assertIsCreator(order, userId);
     if (order.status !== "IN_PROGRESS" && order.status !== "REVISION_REQUESTED") {
       throw new ConflictError(`Cannot submit from status ${order.status}`);
     }
-    const updated = await ordersRepository.update(orderId, { status: "SUBMITTED", submittedAt: new Date() });
+    const updated = await ordersRepository.update(orderId, {
+      status: "SUBMITTED",
+      submittedAt: new Date(),
+      deliveryNote: input.deliveryNote
+    });
     notificationsService.notify(
       order.offer.developer.userId,
       "ORDER_UPDATE",

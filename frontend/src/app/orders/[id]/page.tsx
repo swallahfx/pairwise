@@ -34,10 +34,17 @@ export default function OrderStatusPage() {
   const [showDisputeForm, setShowDisputeForm] = useState(false);
   const [disputeReason, setDisputeReason] = useState("");
   const [respondText, setRespondText] = useState("");
+  const [deliveryNote, setDeliveryNote] = useState("");
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["order", params.id] });
   const startMutation = useMutation({ mutationFn: () => api.orders.start(params.id), onSuccess: invalidate });
-  const submitMutation = useMutation({ mutationFn: () => api.orders.submit(params.id), onSuccess: invalidate });
+  const submitMutation = useMutation({
+    mutationFn: () => api.orders.submit(params.id, deliveryNote),
+    onSuccess: () => {
+      setDeliveryNote("");
+      invalidate();
+    }
+  });
   const revisionMutation = useMutation({
     mutationFn: () => api.orders.requestRevision(params.id),
     onSuccess: invalidate
@@ -95,6 +102,13 @@ export default function OrderStatusPage() {
         <div className="mt-4 bg-surface border border-border rounded-card p-5">
           <div className="text-[13px] font-semibold text-ink-muted mb-1.5">What was requested</div>
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{order.offer.requirements}</p>
+        </div>
+      )}
+
+      {order.deliveryNote && (
+        <div className="mt-4 bg-surface border border-border rounded-card p-5">
+          <div className="text-[13px] font-semibold text-ink-muted mb-1.5">What was delivered</div>
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">{order.deliveryNote}</p>
         </div>
       )}
 
@@ -204,12 +218,34 @@ export default function OrderStatusPage() {
       )}
 
       {hasRole(user, "CREATOR") && (order.status === "IN_PROGRESS" || order.status === "REVISION_REQUESTED") && (
-        <ActionRow
-          message="Done? Submit for the developer to review."
-          buttonLabel="Submit work"
-          onClick={() => submitMutation.mutate()}
-          pending={submitMutation.isPending}
-        />
+        <div className="mt-4 bg-surface border border-border rounded-card p-6 space-y-3">
+          <div className="text-sm font-semibold">Done? Submit for the developer to review.</div>
+          <form
+            className="space-y-2.5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitMutation.mutate();
+            }}
+          >
+            <label className="block text-[13px] font-semibold">What did you deliver?</label>
+            <textarea
+              className="input"
+              rows={3}
+              placeholder="A link, or a description of where/how it was sent"
+              value={deliveryNote}
+              onChange={(e) => setDeliveryNote(e.target.value)}
+              required
+              minLength={5}
+            />
+            <button
+              type="submit"
+              disabled={submitMutation.isPending}
+              className="bg-gradient-to-r from-accent to-accent-teal text-white text-sm font-semibold px-4 py-2.5 rounded-lg disabled:opacity-60"
+            >
+              {submitMutation.isPending ? "Submitting…" : "Submit work"}
+            </button>
+          </form>
+        </div>
       )}
 
       {hasRole(user, "DEVELOPER") && order.status === "SUBMITTED" && (

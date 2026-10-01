@@ -19,6 +19,7 @@ export interface OrderUpdate {
   submittedAt?: Date;
   approvedAt?: Date;
   paidAt?: Date;
+  deliveryNote?: string;
   disputeReason?: string;
   disputedByUserId?: string;
   disputedAt?: Date;

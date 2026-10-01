@@ -145,7 +145,11 @@ export const api = {
     mine: () => request<import("@/types").Order[]>("/orders/mine"),
     fund: (id: string) => request<{ authorizationUrl: string }>(`/orders/${id}/fund`, { method: "POST" }),
     start: (id: string) => request<import("@/types").Order>(`/orders/${id}/start`, { method: "POST" }),
-    submit: (id: string) => request<import("@/types").Order>(`/orders/${id}/submit`, { method: "POST" }),
+    submit: (id: string, deliveryNote: string) =>
+      request<import("@/types").Order>(`/orders/${id}/submit`, {
+        method: "POST",
+        body: JSON.stringify({ deliveryNote })
+      }),
     requestRevision: (id: string) =>
       request<import("@/types").Order>(`/orders/${id}/request-revision`, { method: "POST" }),
     approve: (id: string) => request<import("@/types").Order>(`/orders/${id}/approve`, { method: "POST" }),

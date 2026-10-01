@@ -30,7 +30,7 @@ export const ordersController = {
     res.json(order);
   },
   async submit(req: Request, res: Response) {
-    const order = await ordersService.submit(req.params.id, req.auth!.userId);
+    const order = await ordersService.submit(req.params.id, req.auth!.userId, req.body);
     res.json(order);
   },
   async requestRevision(req: Request, res: Response) {

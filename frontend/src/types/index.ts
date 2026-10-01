@@ -77,6 +77,7 @@ export interface Order {
   submittedAt: string | null;
   approvedAt: string | null;
   paidAt: string | null;
+  deliveryNote: string | null;
   disputeReason: string | null;
   disputedByUserId: string | null;
   disputedAt: string | null;

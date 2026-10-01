@@ -257,6 +257,14 @@ model Order {
   paidAt                DateTime?
   createdAt             DateTime    @default(now())
 
+  // What the creator actually delivered — a link, or a description of
+  // where/how it was sent. The platform only tracks the order's status,
+  // never the deliverable's content, so without this the developer's
+  // approve/reject decision had nothing on the order itself to go on
+  // besides whatever was said off-platform. Overwritten on a resubmit
+  // after a revision request, same as dispute fields aren't a full thread.
+  deliveryNote String?
+
   // Self-service dispute: either party can raise one (see
   // ordersService.raiseDispute), which is what actually moves status to
   // DISPUTED now, not just an admin acting unprompted. disputedByUserId

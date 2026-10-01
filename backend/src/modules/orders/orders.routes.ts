@@ -3,7 +3,7 @@ import { asyncHandler } from "../../common/asyncHandler";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
 import { ordersController } from "./orders.controller";
-import { raiseDisputeSchema, respondToDisputeSchema } from "./orders.schema";
+import { raiseDisputeSchema, respondToDisputeSchema, submitOrderSchema } from "./orders.schema";
 
 export const ordersRouter = Router();
 
@@ -30,7 +30,12 @@ ordersRouter.post(
 ordersRouter.get("/:id", requireAuth, asyncHandler(ordersController.getById));
 ordersRouter.post("/:id/fund", requireAuth, asyncHandler(ordersController.fund));
 ordersRouter.post("/:id/start", requireAuth, asyncHandler(ordersController.start));
-ordersRouter.post("/:id/submit", requireAuth, asyncHandler(ordersController.submit));
+ordersRouter.post(
+  "/:id/submit",
+  requireAuth,
+  validate(submitOrderSchema),
+  asyncHandler(ordersController.submit)
+);
 ordersRouter.post("/:id/request-revision", requireAuth, asyncHandler(ordersController.requestRevision));
 ordersRouter.post("/:id/approve", requireAuth, asyncHandler(ordersController.approve));
 ordersRouter.post(

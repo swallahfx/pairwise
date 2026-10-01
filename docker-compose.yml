@@ -38,7 +38,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: sh -c "npx prisma migrate deploy && npx prisma db seed && node dist/server.js"
+    # SKIP_SEED=true (set directly in a deployment's backend/.env, not
+    # committed — local dev leaves it unset) stops the idempotent demo
+    # seed from running at all. Needed once real users exist: the seed
+    # upserts by email, so it would otherwise just keep recreating the
+    # same dummy creators/products every deploy forever.
+    command: sh -c "npx prisma migrate deploy && ([ \"$$SKIP_SEED\" = \"true\" ] || npx prisma db seed) && node dist/server.js"
 
   frontend:
     build:

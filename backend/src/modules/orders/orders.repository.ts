@@ -37,10 +37,16 @@ const withParties = {
 } as const;
 
 export const ordersRepository = {
-  create(offerId: string, priceKobo: number, platformFeeKobo: number, totalKobo: number) {
+  create(offerId: string, priceKobo: number, platformFeeKobo: number, totalKobo: number, feeWaived: boolean) {
     return prisma.order.create({
-      data: { offerId, priceKobo, platformFeeKobo, totalKobo, status: "AGREED" }
+      data: { offerId, priceKobo, platformFeeKobo, totalKobo, feeWaived, status: "AGREED" }
     });
+  },
+  // "Funded" here means ever moved past AGREED — an abandoned order a
+  // developer never actually paid for shouldn't burn their one free
+  // campaign, so this only counts orders that had real money behind them.
+  countFundedForDeveloper(developerId: string) {
+    return prisma.order.count({ where: { offer: { developerId }, status: { not: "AGREED" } } });
   },
   findById(id: string) {
     return prisma.order.findUnique({ where: { id }, include: withParties });

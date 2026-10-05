@@ -95,8 +95,17 @@ export default function CheckoutPage() {
           </div>
           <div className="flex justify-between text-sm mb-3.5">
             <span className="text-ink-muted">Platform fee</span>
-            <span>₦{(order.platformFeeKobo / 100).toLocaleString("en-NG")}</span>
+            {order.feeWaived ? (
+              <span className="text-money font-semibold">Waived</span>
+            ) : (
+              <span>₦{(order.platformFeeKobo / 100).toLocaleString("en-NG")}</span>
+            )}
           </div>
+          {order.feeWaived && (
+            <div className="text-xs text-money bg-money/10 rounded-lg px-3 py-2 mb-3.5">
+              Your first campaign is on us — no platform fee.
+            </div>
+          )}
           <div className="flex justify-between items-baseline pt-3.5 border-t border-border">
             <span className="text-sm font-semibold">Total</span>
             <Money kobo={order.totalKobo} size="text-2xl" />

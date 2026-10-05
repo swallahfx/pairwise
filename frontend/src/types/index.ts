@@ -72,6 +72,7 @@ export interface Order {
   priceKobo: number;
   platformFeeKobo: number;
   totalKobo: number;
+  feeWaived: boolean;
   status: OrderStatus;
   fundedAt: string | null;
   submittedAt: string | null;

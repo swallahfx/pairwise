@@ -86,9 +86,18 @@ export const ordersService = {
     return ordersRepository.findAll();
   },
 
-  async createFromOffer(offerId: string, priceKobo: number) {
-    const { platformFeeKobo, totalKobo } = paymentsService.computeFee(priceKobo);
-    return ordersRepository.create(offerId, priceKobo, platformFeeKobo, totalKobo);
+  // The developer's first-ever funded campaign goes through fee-free — a
+  // one-time incentive to get a first booking across the line, not a
+  // recurring discount. Checked here, at creation, against their funded
+  // history so far (not at fund() time) because totalKobo has to be fixed
+  // before the Paystack charge is ever opened.
+  async createFromOffer(offerId: string, priceKobo: number, developerId: string) {
+    const priorFundedOrders = await ordersRepository.countFundedForDeveloper(developerId);
+    const isFirstCampaign = priorFundedOrders === 0;
+    const { platformFeeKobo, totalKobo } = isFirstCampaign
+      ? { platformFeeKobo: 0, totalKobo: priceKobo }
+      : paymentsService.computeFee(priceKobo);
+    return ordersRepository.create(offerId, priceKobo, platformFeeKobo, totalKobo, isFirstCampaign);
   },
 
   // Opens a Paystack transaction and hands back its hosted payment page —

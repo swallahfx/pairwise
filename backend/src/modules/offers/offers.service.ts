@@ -133,7 +133,7 @@ export const offersService = {
       await prisma.advertRequest.update({ where: { id: offer.requestId }, data: { status: "CLOSED" } });
     }
 
-    const order = await ordersService.createFromOffer(offer.id, offer.priceKobo);
+    const order = await ordersService.createFromOffer(offer.id, offer.priceKobo, offer.developerId);
     const { userId: recipientId, message } = acceptNotificationFor(offer);
     notificationsService.notify(recipientId, "OFFER_UPDATE", message, `/orders/${order.id}`);
     return { offer, order };

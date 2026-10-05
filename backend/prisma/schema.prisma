@@ -257,6 +257,13 @@ model Order {
   paidAt                DateTime?
   createdAt             DateTime    @default(now())
 
+  // Set at creation time when this was the developer's first-ever funded
+  // campaign (see ordersService.createFromOffer) — platformFeeKobo is 0 and
+  // totalKobo equals priceKobo for this order specifically. Stored rather
+  // than inferred from platformFeeKobo === 0 so the checkout page and admin
+  // view can show *why* the fee is zero instead of guessing.
+  feeWaived Boolean @default(false)
+
   // What the creator actually delivered — a link, or a description of
   // where/how it was sent. The platform only tracks the order's status,
   // never the deliverable's content, so without this the developer's

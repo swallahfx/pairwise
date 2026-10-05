@@ -604,6 +604,11 @@ function OrdersTable() {
                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${ORDER_STATUS_STYLES[o.status] ?? "bg-accent/10 text-accent"}`}>
                   {o.status}
                 </span>
+                {o.feeWaived && (
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-money/10 text-money">
+                    first campaign — fee waived
+                  </span>
+                )}
                 {o.status !== "PAID" && o.status !== "REFUNDED" && (
                   <button
                     onClick={() => disputeMutation.mutate(o.id)}

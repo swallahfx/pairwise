@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { roleLabel } from "@/lib/roleLabel";
 import { NotificationBell } from "./NotificationBell";
 
 const links = [
@@ -72,15 +73,7 @@ export function NavBar() {
         ...(user.role === "BRAND" || user.role === "ADMIN" ? [{ href: "/brands/me", label: "My Brand" }] : [])
       ];
 
-  const roleLabel = !user
-    ? ""
-    : user.role === "DEVELOPER"
-      ? "Developer"
-      : user.role === "CREATOR"
-        ? "Creator"
-        : user.role === "BRAND"
-          ? "Brand"
-          : "Admin";
+  const roleLabelText = !user ? "" : roleLabel(user.role);
 
   function onLogout() {
     logout();
@@ -124,7 +117,7 @@ export function NavBar() {
               >
                 <span>
                   <span className="block text-sm font-semibold">{user.name}</span>
-                  <span className="block text-xs text-ink-muted">{roleLabel}</span>
+                  <span className="block text-xs text-ink-muted">{roleLabelText}</span>
                 </span>
                 <span className="text-ink-muted text-xs mt-0.5">▾</span>
               </button>
@@ -203,7 +196,7 @@ export function NavBar() {
             <div className="flex items-center justify-between pb-4 mb-3 border-b border-border">
               <div>
                 <div className="text-sm font-semibold">{user.name}</div>
-                <div className="text-xs text-ink-muted">{roleLabel}</div>
+                <div className="text-xs text-ink-muted">{roleLabelText}</div>
               </div>
               <button onClick={onLogout} className="text-sm text-ink-muted font-semibold px-2 py-1.5">
                 Log out

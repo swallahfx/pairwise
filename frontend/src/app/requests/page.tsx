@@ -67,7 +67,7 @@ export default function RequestsPage() {
           <div>
             <h1 className="font-display text-4xl font-semibold mb-3">Open requests, budget included.</h1>
             <p className="text-ink-muted">
-              These are developers whose budget didn&apos;t match a listed rate. Apply directly.
+              These are businesses whose budget didn&apos;t match a listed rate. Apply directly.
             </p>
           </div>
           <Link href="/requests/new">

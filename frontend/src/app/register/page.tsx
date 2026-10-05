@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { roleLabel } from "@/lib/roleLabel";
 import { GoogleSignInButton } from "@/components/ui/GoogleSignInButton";
 
 export default function RegisterPage() {
@@ -43,7 +44,7 @@ export default function RegisterPage() {
     <div className="max-w-sm mx-auto px-6 py-16">
       <h1 className="font-display text-3xl font-semibold mb-2">Create an account</h1>
       <p className="text-ink-muted mb-9">
-        Developers hire creators. Creators list rates. Brands sell advertising into their own upcoming
+        Businesses hire creators. Creators list rates. Brands sell advertising into their own upcoming
         programs.
       </p>
 
@@ -66,7 +67,7 @@ export default function RegisterPage() {
                   form.role === role ? "bg-gradient-to-r from-accent to-accent-teal text-white border-accent" : "bg-surface border-border"
                 }`}
               >
-                {role === "DEVELOPER" ? "Developer" : role === "CREATOR" ? "Creator" : "Brand"}
+                {roleLabel(role)}
               </button>
             ))}
           </div>
@@ -119,8 +120,8 @@ export default function RegisterPage() {
 
       <GoogleSignInButton role={form.role} onCredential={(credential) => googleMutation.mutate(credential)} />
       <p className="text-xs text-ink-muted mt-2">
-        Signs up as{" "}
-        {form.role === "DEVELOPER" ? "a developer" : form.role === "CREATOR" ? "a creator" : "a brand"} — change
+        Signs up as a{" "}
+        {form.role === "DEVELOPER" ? "business" : form.role === "CREATOR" ? "creator" : "brand"} — change
         that above first if needed.
       </p>
       {googleMutation.isError && (

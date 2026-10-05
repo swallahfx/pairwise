@@ -107,7 +107,7 @@ export default function CreatorProfilePage() {
 
         {creator.ratesHidden ? (
           <div className="border border-border rounded-card bg-surface p-6 text-sm text-ink-muted">
-            Rates are visible to developer accounts.
+            Rates are visible to business accounts.
           </div>
         ) : (
           <>
@@ -196,7 +196,7 @@ export default function CreatorProfilePage() {
                 </button>
               ) : (
                 <Link href="/login" className="text-sm font-semibold text-accent">
-                  Log in as a developer to send one
+                  Log in as a business to send one
                 </Link>
               )}
             </div>

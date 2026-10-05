@@ -261,7 +261,7 @@ function CreatorMeContent() {
       {tab === "rates" && (
         <div>
           <p className="text-ink-muted mb-5">
-            Fixed prices for one-off bespoke deliverables — a developer books one directly, no negotiation.
+            Fixed prices for one-off bespoke deliverables — a business books one directly, no negotiation.
           </p>
           <div className="border border-border rounded-card bg-surface overflow-hidden mb-4">
             {creator.rateCardItems.length === 0 && (

@@ -164,7 +164,7 @@ export default function OrderStatusPage() {
           <div className="text-sm text-ink-muted mt-1">
             {isDisputed
               ? "A human review is needed — this doesn't auto-resolve."
-              : "An admin reviewed this and refunded the developer."}
+              : "An admin reviewed this and refunded the business."}
           </div>
         </div>
       ) : (
@@ -219,7 +219,7 @@ export default function OrderStatusPage() {
 
       {hasRole(user, "CREATOR") && (order.status === "IN_PROGRESS" || order.status === "REVISION_REQUESTED") && (
         <div className="mt-4 bg-surface border border-border rounded-card p-6 space-y-3">
-          <div className="text-sm font-semibold">Done? Submit for the developer to review.</div>
+          <div className="text-sm font-semibold">Done? Submit for the business to review.</div>
           <form
             className="space-y-2.5"
             onSubmit={(e) => {

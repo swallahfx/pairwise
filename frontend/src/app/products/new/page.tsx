@@ -17,12 +17,12 @@ export default function NewProductPage() {
         <Link href="/login" className="text-accent font-semibold">
           Log in
         </Link>{" "}
-        as a developer to list a product.
+        as a business to list a product.
       </div>
     );
   }
   if (!hasRole(user, "DEVELOPER")) {
-    return <div className="p-14 text-ink-muted">Only developer accounts can list products.</div>;
+    return <div className="p-14 text-ink-muted">Only business accounts can list products.</div>;
   }
 
   return <NewProductForm />;

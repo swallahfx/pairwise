@@ -17,12 +17,12 @@ export default function NewRequestPage() {
         <Link href="/login" className="text-accent font-semibold">
           Log in
         </Link>{" "}
-        as a developer to post a request.
+        as a business to post a request.
       </div>
     );
   }
   if (!hasRole(user, "DEVELOPER")) {
-    return <div className="p-14 text-ink-muted">Only developer accounts can post a budget request.</div>;
+    return <div className="p-14 text-ink-muted">Only business accounts can post a budget request.</div>;
   }
 
   return <NewRequestForm />;

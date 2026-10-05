@@ -40,7 +40,7 @@ export default function OffersPage() {
                 viewAs === v ? "bg-gradient-to-r from-accent to-accent-teal text-white border-accent" : "bg-surface border-border text-ink-muted"
               }`}
             >
-              As {v === "CREATOR" ? "creator" : "developer"}
+              As {v === "CREATOR" ? "creator" : "business"}
             </button>
           ))}
         </div>
@@ -87,8 +87,8 @@ function CreatorOffersInbox() {
     <div className="px-4 sm:px-8 lg:px-14 py-12 max-w-3xl">
       <h1 className="font-display text-3xl font-semibold mb-2">Offers</h1>
       <p className="text-ink-muted mb-10">
-        Rate-card bookings and custom offers developers sent you directly. Accepting opens an order — the
-        developer funds it next.
+        Rate-card bookings and custom offers businesses sent you directly. Accepting opens an order — the
+        business funds it next.
       </p>
 
       {isLoading && <p className="text-ink-muted">Loading…</p>}

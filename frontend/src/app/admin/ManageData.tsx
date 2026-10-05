@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { roleLabel } from "@/lib/roleLabel";
 import { Money } from "@/components/ui/Money";
 import {
   AdminUser,
@@ -151,7 +152,7 @@ function UsersTable() {
                   {u.name} <span className="text-ink-muted font-normal">· {u.email}</span>
                 </div>
                 <div className="text-[13px] text-ink-muted mt-0.5">
-                  {u.role}
+                  {roleLabel(u.role)}
                   {u.creatorProfile && ` · ${u.creatorProfile.handle} · ${u.creatorProfile.gateStatus}`}
                   {u.brandProfile && ` · ${u.brandProfile.companyName}`}
                   {" · joined "}

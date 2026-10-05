@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { roleLabel } from "@/lib/roleLabel";
 import { Money } from "@/components/ui/Money";
 import { ManageData } from "./ManageData";
 import { Analytics } from "./Analytics";
@@ -268,7 +269,7 @@ function CreateUserForm() {
     return (
       <div className="bg-surface border border-border rounded-card p-6">
         <p className="text-sm font-semibold text-money mb-4">
-          Created {createMutation.data.email} as {createMutation.data.role.toLowerCase()}.
+          Created {createMutation.data.email} as {roleLabel(createMutation.data.role).toLowerCase()}.
         </p>
         <button onClick={() => createMutation.reset()} className="text-sm font-semibold text-accent">
           Create another →
@@ -302,7 +303,7 @@ function CreateUserForm() {
                 form.role === role ? "bg-gradient-to-r from-accent to-accent-teal text-white border-accent" : "bg-surface border-border"
               }`}
             >
-              {role[0] + role.slice(1).toLowerCase()}
+              {roleLabel(role)}
             </button>
           ))}
         </div>

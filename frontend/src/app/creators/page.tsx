@@ -198,7 +198,7 @@ export default function CreatorsDirectoryPage() {
                     <div className="flex items-center gap-4 flex-shrink-0 sm:justify-end">
                       {c.ratesHidden ? (
                         <div className="text-xs text-ink-muted text-right max-w-[110px]">
-                          Rates visible to developers
+                          Rates visible to businesses
                         </div>
                       ) : (
                         cheapest && (

@@ -1,5 +1,6 @@
 import { ConflictError, ForbiddenError, NotFoundError } from "../../common/errors";
 import { env } from "../../config/env";
+import { bachsService } from "../bachs/bachs.service";
 import { notificationsService } from "../notifications/notifications.service";
 import { paymentsService } from "../payments/payments.service";
 import { ordersRepository } from "./orders.repository";
@@ -35,24 +36,29 @@ function assertIsCreator(order: NonNullable<OrderWithParties>, userId: string) {
 // Shared by the normal SUBMITTED->approve path and the DISPUTED->admin
 // override path — both end the same way, actually moving money.
 async function payoutToCreator(order: NonNullable<OrderWithParties>) {
-  const recipientCode = order.offer.creator.paystackRecipientCode;
+  // Whichever provider actually collected this order's funds is the only
+  // one that can pay them back out — the money is sitting in that
+  // provider's balance, not the other's. Falls back to Paystack for orders
+  // funded before this field existed.
+  const provider = order.paymentProvider ?? "PAYSTACK";
+  const recipientCode =
+    provider === "BACHS" ? order.offer.creator.bachsAccountId : order.offer.creator.paystackRecipientCode;
   if (!recipientCode) {
     throw new ConflictError("Creator has not set up a payout account yet");
   }
-  let transfer: Awaited<ReturnType<typeof paymentsService.transferToCreator>>;
+  let transfer: { transfer_code: string };
   try {
-    transfer = await paymentsService.transferToCreator(
-      order.priceKobo,
-      recipientCode,
-      `Payout for order ${order.id}`
-    );
+    transfer =
+      provider === "BACHS"
+        ? await bachsService.transferToCreator(order.priceKobo, recipientCode, `Payout for order ${order.id}`, order.id)
+        : await paymentsService.transferToCreator(order.priceKobo, recipientCode, `Payout for order ${order.id}`);
   } catch (err) {
-    // Paystack's own message here is the actionable part (e.g. "You cannot
-    // initiate third party payouts as a starter business" — an account-tier
-    // restriction, not a bug) — surface it as a real 409 instead of letting
-    // it fall through to the generic 500 handler, which logs it but tells
-    // the caller nothing.
-    throw new ConflictError(`Payout failed: ${err instanceof Error ? err.message : "unknown Paystack error"}`);
+    // The provider's own message here is the actionable part (e.g.
+    // Paystack's "You cannot initiate third party payouts as a starter
+    // business" — an account-tier restriction, not a bug) — surface it as a
+    // real 409 instead of letting it fall through to the generic 500
+    // handler, which logs it but tells the caller nothing.
+    throw new ConflictError(`Payout failed: ${err instanceof Error ? err.message : `unknown ${provider} error`}`);
   }
   return ordersRepository.update(order.id, {
     status: "PAID",
@@ -100,10 +106,12 @@ export const ordersService = {
     return ordersRepository.create(offerId, priceKobo, platformFeeKobo, totalKobo, isFirstCampaign);
   },
 
-  // Opens a Paystack transaction and hands back its hosted payment page —
-  // the order stays AGREED until the payment is actually confirmed (see
-  // confirmFunding), unlike a pre-authorized-card flow where you'd know
-  // synchronously whether it succeeded.
+  // Opens a transaction on whichever provider is active and hands back its
+  // hosted payment page — the order stays AGREED until the payment is
+  // actually confirmed (see confirmFunding), unlike a pre-authorized-card
+  // flow where you'd know synchronously whether it succeeded. The provider
+  // is picked once here and stored, since whichever one collects the funds
+  // is the only one that can release them later.
   async fund(orderId: string, userId: string) {
     const order = await ordersRepository.findById(orderId);
     if (!order) throw new NotFoundError("Order");
@@ -112,27 +120,36 @@ export const ordersService = {
       throw new ConflictError(`Cannot fund an order in status ${order.status}`);
     }
 
-    const reference = `order_${order.id}_${Date.now()}`;
+    const provider = paymentsService.isLiveMode() ? "PAYSTACK" : "BACHS";
+    const svc = provider === "BACHS" ? bachsService : paymentsService;
+    const ownReference = `order_${order.id}_${Date.now()}`;
     const callbackUrl = `${env.clientOrigin}/checkout/${order.id}/callback`;
-    const { authorization_url } = await paymentsService.initializeTransaction(
+    const { authorization_url, reference } = await svc.initializeTransaction(
       order.totalKobo,
       order.offer.developer.user.email,
-      reference,
+      ownReference,
       callbackUrl,
       { orderId: order.id }
     );
 
-    await ordersRepository.update(order.id, { paystackReference: reference });
+    // Paystack echoes back the reference we sent; Bachs hands back its own
+    // checkout_id instead (there's no reliable lookup-by-our-reference on
+    // their side) — either way, `reference` here is what findByPaystackReference
+    // looks this order back up by, regardless of provider.
+    await ordersRepository.update(order.id, {
+      paymentProvider: provider,
+      paystackReference: reference ?? ownReference
+    });
 
     return { authorizationUrl: authorization_url };
   },
 
   // Called from two places that both need to be safe to call more than
   // once for the same order: the webhook (the durable source of truth,
-  // but unreachable from a local dev server) and the page Paystack
+  // but unreachable from a local dev server) and the page the provider
   // redirects the browser back to after checkout (the only thing that
-  // actually confirms funding in local/dev runs). Verifies against
-  // Paystack directly rather than trusting the redirect's query params.
+  // actually confirms funding in local/dev runs). Verifies against the
+  // provider directly rather than trusting the redirect's query params.
   async confirmFunding(reference: string) {
     const order = await ordersRepository.findByPaystackReference(reference);
     if (!order) throw new NotFoundError("Order");
@@ -140,7 +157,8 @@ export const ordersService = {
       return order;
     }
 
-    const verified = await paymentsService.verifyTransaction(reference);
+    const svc = order.paymentProvider === "BACHS" ? bachsService : paymentsService;
+    const verified = await svc.verifyTransaction(reference);
     if (verified.status !== "success") {
       throw new ConflictError(`Payment was not successful (status: ${verified.status})`);
     }

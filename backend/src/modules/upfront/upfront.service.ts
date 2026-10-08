@@ -2,6 +2,7 @@ import { ConflictError, ForbiddenError, NotFoundError } from "../../common/error
 import { BlockedItem, blockedDeleteMessage, describeBlockedPurchase, purchaseIsFinancial } from "../../common/financialGuard";
 import { prisma } from "../../config/db";
 import { env } from "../../config/env";
+import { bachsService } from "../bachs/bachs.service";
 import { notificationsService } from "../notifications/notifications.service";
 import { paymentsService } from "../payments/payments.service";
 import { upfrontRepository } from "./upfront.repository";
@@ -23,6 +24,10 @@ function assertIsBuyer(purchase: NonNullable<PurchaseWithParties>, userId: strin
 // per Order; it's exactly one of these two, decided by listerType.
 function listerRecipientCode(listing: NonNullable<ListingWithLister>): string | null {
   return listing.listerType === "CREATOR" ? (listing.creator?.paystackRecipientCode ?? null) : (listing.brand?.paystackRecipientCode ?? null);
+}
+
+function listerBachsAccountId(listing: NonNullable<ListingWithLister>): string | null {
+  return listing.listerType === "CREATOR" ? (listing.creator?.bachsAccountId ?? null) : (listing.brand?.bachsAccountId ?? null);
 }
 
 function listerUserId(listing: NonNullable<ListingWithLister>): string | null {
@@ -193,17 +198,22 @@ export const upfrontService = {
       throw new ConflictError(`Cannot fund a purchase in status ${purchase.status}`);
     }
 
-    const reference = `upfront_${purchase.id}_${Date.now()}`;
+    const provider = paymentsService.isLiveMode() ? "PAYSTACK" : "BACHS";
+    const svc = provider === "BACHS" ? bachsService : paymentsService;
+    const ownReference = `upfront_${purchase.id}_${Date.now()}`;
     const callbackUrl = `${env.clientOrigin}/upfront/checkout/${purchase.id}/callback`;
-    const { authorization_url } = await paymentsService.initializeTransaction(
+    const { authorization_url, reference } = await svc.initializeTransaction(
       purchase.totalKobo,
       purchase.buyer.email,
-      reference,
+      ownReference,
       callbackUrl,
       { upfrontPurchaseId: purchase.id }
     );
 
-    await upfrontRepository.updatePurchase(purchase.id, { paystackReference: reference });
+    await upfrontRepository.updatePurchase(purchase.id, {
+      paymentProvider: provider,
+      paystackReference: reference ?? ownReference
+    });
     return { authorizationUrl: authorization_url };
   },
 
@@ -214,7 +224,8 @@ export const upfrontService = {
     if (!purchase) throw new NotFoundError("Purchase");
     if (purchase.status !== "AGREED") return purchase;
 
-    const verified = await paymentsService.verifyTransaction(reference);
+    const svc = purchase.paymentProvider === "BACHS" ? bachsService : paymentsService;
+    const verified = await svc.verifyTransaction(reference);
     if (verified.status !== "success") {
       throw new ConflictError(`Payment was not successful (status: ${verified.status})`);
     }
@@ -261,23 +272,33 @@ export const upfrontService = {
       throw new ConflictError("Purchase must be funded before it can be approved");
     }
 
-    const recipientCode = listerRecipientCode(purchase.listing);
+    const provider = purchase.paymentProvider ?? "PAYSTACK";
+    const recipientCode =
+      provider === "BACHS" ? listerBachsAccountId(purchase.listing) : listerRecipientCode(purchase.listing);
     if (!recipientCode) {
       throw new ConflictError("The lister has not set up a payout account yet");
     }
 
-    let transfer: Awaited<ReturnType<typeof paymentsService.transferToCreator>>;
+    let transfer: { transfer_code: string };
     try {
-      transfer = await paymentsService.transferToCreator(
-        purchase.priceKobo,
-        recipientCode,
-        `Payout for upfront purchase ${purchase.id}`
-      );
+      transfer =
+        provider === "BACHS"
+          ? await bachsService.transferToCreator(
+              purchase.priceKobo,
+              recipientCode,
+              `Payout for upfront purchase ${purchase.id}`,
+              purchase.id
+            )
+          : await paymentsService.transferToCreator(
+              purchase.priceKobo,
+              recipientCode,
+              `Payout for upfront purchase ${purchase.id}`
+            );
     } catch (err) {
-      // Same reasoning as orders.service's payoutToCreator — surface
-      // Paystack's actual reason (e.g. an account-tier restriction) instead
-      // of a generic 500 that tells the caller nothing.
-      throw new ConflictError(`Payout failed: ${err instanceof Error ? err.message : "unknown Paystack error"}`);
+      // Same reasoning as orders.service's payoutToCreator — surface the
+      // provider's actual reason (e.g. a Paystack account-tier restriction)
+      // instead of a generic 500 that tells the caller nothing.
+      throw new ConflictError(`Payout failed: ${err instanceof Error ? err.message : `unknown ${provider} error`}`);
     }
 
     const updated = await upfrontRepository.updatePurchase(purchaseId, {

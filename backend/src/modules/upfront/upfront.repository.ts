@@ -38,6 +38,7 @@ export interface NewPurchaseData {
 
 export interface PurchaseUpdate {
   status?: PurchaseStatus;
+  paymentProvider?: "PAYSTACK" | "BACHS";
   paystackReference?: string;
   paystackTransferCode?: string;
   fundedAt?: Date;

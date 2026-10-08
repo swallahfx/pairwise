@@ -19,6 +19,18 @@ enum ListerType {
   BRAND
 }
 
+// Which provider actually processed a given Order/UpfrontPurchase — set once
+// at funding time (see paymentsService.isLiveMode) and reused for that
+// record's whole lifecycle (confirm, release, refund), never re-derived
+// later. Bachs is the fallback while Paystack's business compliance is
+// still pending; Paystack becomes primary once PAYSTACK_SECRET_KEY is a
+// live key. The two providers can't settle each other's money, so this
+// has to stay pinned per-record.
+enum PaymentProvider {
+  PAYSTACK
+  BACHS
+}
+
 enum UpfrontPurchaseStatus {
   AGREED
   FUNDED
@@ -128,6 +140,11 @@ model BrandProfile {
   bankCode              String?
   bankAccountName       String?
   paystackRecipientCode String?
+  // Bachs' equivalent of paystackRecipientCode — a recipient-persona
+  // Connect account (acct_...) created once alongside the Paystack
+  // recipient whenever payout details are saved, so either provider can
+  // pay this brand out whenever it's the active one.
+  bachsAccountId        String?
   createdAt   DateTime @default(now())
 
   listings UpfrontListing[]
@@ -176,6 +193,8 @@ model CreatorProfile {
   bankCode              String?
   bankAccountName       String?
   paystackRecipientCode String?
+  // Bachs' equivalent of paystackRecipientCode (see BrandProfile.bachsAccountId).
+  bachsAccountId        String?
   createdAt       DateTime   @default(now())
 
   rateCardItems   RateCardItem[]
@@ -249,6 +268,12 @@ model Order {
   platformFeeKobo      Int
   totalKobo            Int
   status                OrderStatus @default(AGREED)
+  // Chosen once at fund() time (see ordersService.fund) and reused for
+  // this order's whole lifecycle — null until first funding attempt.
+  paymentProvider       PaymentProvider?
+  // Holds whichever provider's own reference/checkout id: a Paystack
+  // transaction reference, or a Bachs checkout_id. Looked up by
+  // ordersRepository.findByPaystackReference regardless of provider.
   paystackReference     String?
   paystackTransferCode  String?
   fundedAt              DateTime?
@@ -342,6 +367,9 @@ model UpfrontPurchase {
   platformFeeKobo      Int
   totalKobo            Int
   status               UpfrontPurchaseStatus @default(AGREED)
+  // See Order.paymentProvider/paystackReference — same reasoning, chosen
+  // once at fundPurchase() time and reused for this purchase's lifecycle.
+  paymentProvider      PaymentProvider?
   paystackReference    String?
   paystackTransferCode String?
   fundedAt             DateTime?

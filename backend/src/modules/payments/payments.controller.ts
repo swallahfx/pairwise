@@ -1,17 +1,26 @@
 import { Request, Response } from "express";
 import { prisma } from "../../config/db";
+import { env } from "../../config/env";
 import { paymentsService } from "./payments.service";
+import { bachsService } from "../bachs/bachs.service";
 import { ordersService } from "../orders/orders.service";
 import { upfrontService } from "../upfront/upfront.service";
 import { ForbiddenError, NotFoundError } from "../../common/errors";
 
-// Order and Upfront purchase references are prefixed at creation time
-// (order_... / upfront_...) specifically so this one webhook/verify
-// endpoint can serve both domains without either needing to know about
-// the other's existence.
-function confirmFundingByReference(reference: string) {
-  if (reference.startsWith("upfront_")) return upfrontService.confirmFunding(reference);
-  return ordersService.confirmFunding(reference);
+// Paystack references keep the order_.../upfront_... prefix we generate,
+// but a Bachs-funded record is looked up by Bachs' own checkout_id instead
+// (chk_...) — see bachsService.initializeTransaction — which carries no
+// such prefix. Rather than parse two different reference shapes, this just
+// tries orders first and falls back to upfront on a clean "not found",
+// which is correct for both providers and doesn't need to know which one
+// produced the reference.
+async function confirmFundingByReference(reference: string) {
+  try {
+    return await ordersService.confirmFunding(reference);
+  } catch (err) {
+    if (err instanceof NotFoundError) return upfrontService.confirmFunding(reference);
+    throw err;
+  }
 }
 
 export const paymentsController = {
@@ -36,12 +45,31 @@ export const paymentsController = {
     // reports for this account, not anything the browser sent.
     const resolved = await paymentsService.resolveAccountNumber(accountNumber, bankCode);
     const recipient = await paymentsService.createTransferRecipient(resolved.account_name, accountNumber, bankCode);
-    const payoutFields = {
+    const payoutFields: Record<string, unknown> = {
       bankAccountNumber: accountNumber,
       bankCode,
       bankAccountName: resolved.account_name,
       paystackRecipientCode: recipient.recipient_code
     };
+
+    // Set up the Bachs recipient too, alongside Paystack's — this isn't a
+    // separate step for the creator/brand, just a second provider's
+    // recipient record created behind the same Save click, so whichever
+    // provider is active when they actually get paid already has them set
+    // up. Best-effort: an environment with no Bachs account configured yet
+    // shouldn't block saving Paystack details, which may be the only
+    // provider actually in use.
+    if (env.bachsSecretKey) {
+      const user = await prisma.user.findUnique({ where: { id: req.auth!.userId }, select: { email: true } });
+      const bachsAccountId = await bachsService.ensureRecipientAccount(
+        user!.email,
+        resolved.account_name,
+        resolved.account_name,
+        accountNumber,
+        bankCode
+      );
+      payoutFields.bachsAccountId = bachsAccountId;
+    }
 
     if (req.auth!.role === "BRAND") {
       const brand = await prisma.brandProfile.findUnique({ where: { userId: req.auth!.userId } });
@@ -86,5 +114,26 @@ export const paymentsController = {
   async verifyPayment(req: Request, res: Response) {
     const result = await confirmFundingByReference(req.params.reference);
     res.json(result);
+  },
+
+  // Bachs' counterpart to webhook() above — separate route, separate
+  // signature scheme (a per-endpoint secret from the dashboard, verified
+  // via X-Bachs-Signature-V2, not derived from the API key like Paystack's).
+  async bachsWebhook(req: Request, res: Response) {
+    const signature = req.headers["x-bachs-signature-v2"] as string;
+    const rawBody = req.body as Buffer;
+    if (!signature || !bachsService.verifyWebhookSignature(rawBody, signature)) {
+      return res.status(401).json({ error: "InvalidSignature" });
+    }
+
+    const event = JSON.parse(rawBody.toString("utf8"));
+    if (event.type === "collection.succeeded" || event.type === "checkout.completed") {
+      const reference = event.data.reference as string;
+      await confirmFundingByReference(reference).catch((err) => {
+        console.error(`Bachs webhook confirmFunding failed for ${reference}:`, err);
+      });
+    }
+
+    res.json({ received: true });
   }
 };

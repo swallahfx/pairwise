@@ -31,6 +31,12 @@ app.use(cors({ origin: env.clientOrigin }));
 // like every other router — mounting the whole paymentsRouter here too
 // would silently starve those routes of a parsed req.body.
 app.post("/payments/webhook", raw({ type: "application/json" }), asyncHandler(paymentsController.webhook));
+// Same reasoning, for Bachs — see payments.controller.bachsWebhook.
+app.post(
+  "/payments/bachs-webhook",
+  raw({ type: "application/json" }),
+  asyncHandler(paymentsController.bachsWebhook)
+);
 
 app.use(express.json());
 

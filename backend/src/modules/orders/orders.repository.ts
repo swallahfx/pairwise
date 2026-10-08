@@ -10,9 +10,11 @@ type OrderStatus =
   | "PAID"
   | "DISPUTED"
   | "REFUNDED";
+type PaymentProvider = "PAYSTACK" | "BACHS";
 
 export interface OrderUpdate {
   status?: OrderStatus;
+  paymentProvider?: PaymentProvider;
   paystackReference?: string;
   paystackTransferCode?: string;
   fundedAt?: Date;

@@ -7,9 +7,10 @@ import { resolveAccountSchema, savePayoutAccountSchema } from "./payments.schema
 
 export const paymentsRouter = Router();
 
-// The webhook route lives directly on the app in app.ts, mounted before
-// express.json() — it needs the raw body, unlike everything here, which
-// is why it can't share this router (see app.ts for why).
+// Both webhook routes (Paystack's and Bachs') live directly on the app in
+// app.ts, mounted before express.json() — they need the raw body, unlike
+// everything here, which is why they can't share this router (see app.ts
+// for why).
 
 // Bank list + account resolution proxy the Paystack API so the secret key
 // never reaches the frontend.

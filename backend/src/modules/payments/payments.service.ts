@@ -102,6 +102,16 @@ export const paymentsService = {
     });
   },
 
+  // The fallback switch: Paystack doesn't expose any "is this account
+  // activated" endpoint, so there's no reliable way to probe readiness
+  // ahead of time. A live key only ever gets configured once the team has
+  // confirmed collection AND payout both actually work end-to-end on
+  // Paystack — so the key prefix itself doubles as that manual gate,
+  // without a separate flag to keep in sync.
+  isLiveMode(): boolean {
+    return env.paystackSecretKey.startsWith("sk_live_");
+  },
+
   computeFee(priceKobo: number) {
     const platformFeeKobo = Math.round((priceKobo * env.platformFeeBps) / 10000);
     return { platformFeeKobo, totalKobo: priceKobo + platformFeeKobo };

@@ -127,9 +127,12 @@ export const paymentsController = {
     }
 
     const event = JSON.parse(rawBody.toString("utf8"));
-    console.log("Bachs webhook received:", JSON.stringify(event)); // TEMP: confirming real payload shape
     if (event.type === "collection.succeeded" || event.type === "checkout.completed") {
-      const reference = event.data.reference as string;
+      // Confirmed against a real webhook delivery: data.reference carries
+      // the reference string *we* sent at checkout-session creation, not
+      // what's actually stored as paystackReference — that's
+      // data.checkout_id (see bachsService.initializeTransaction).
+      const reference = event.data.checkout_id as string;
       await confirmFundingByReference(reference).catch((err) => {
         console.error(`Bachs webhook confirmFunding failed for ${reference}:`, err);
       });

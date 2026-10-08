@@ -127,6 +127,7 @@ export const paymentsController = {
     }
 
     const event = JSON.parse(rawBody.toString("utf8"));
+    console.log("Bachs webhook received:", JSON.stringify(event)); // TEMP: confirming real payload shape
     if (event.type === "collection.succeeded" || event.type === "checkout.completed") {
       const reference = event.data.reference as string;
       await confirmFundingByReference(reference).catch((err) => {
